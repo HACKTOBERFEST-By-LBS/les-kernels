@@ -13,6 +13,10 @@ export default {
   host: process.env.WA_HOST?.trim() || "127.0.0.1",
   port: 8080,
   apiKey: process.env.WA_API_KEY?.trim() || "hackathon-dev-key",
+  headless: process.env.WA_HEADLESS === "true",
+  qrTimeout: 0,
+  authTimeout: 0,
+  ezqr: true,
   plugins: ["@open-wa/integration-webhook"],
   pluginConfig: {
     webhook: {

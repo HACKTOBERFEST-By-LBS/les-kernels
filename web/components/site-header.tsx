@@ -10,7 +10,6 @@ const NAV_ITEMS = [
 
 export function SiteHeader() {
   const pathname = usePathname();
-  const isAdmin = pathname?.startsWith("/admin");
 
   return (
     <header className="sticky top-0 z-20 border-b border-line bg-card/95 backdrop-blur-md">
@@ -57,21 +56,6 @@ export function SiteHeader() {
               </Link>
             );
           })}
-
-          <span aria-hidden="true" className="mx-0.5 h-5 w-px bg-line" />
-
-          <Link
-            href="/admin"
-            aria-current={isAdmin ? "page" : undefined}
-            title="Espace équipe : liaison WhatsApp et journal des analyses"
-            className={`inline-flex min-h-11 items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground ${
-              isAdmin
-                ? "border border-foreground bg-surface-alt text-foreground"
-                : "text-subtle hover:bg-background hover:text-foreground"
-            }`}
-          >
-            <span>Relais WhatsApp</span>
-          </Link>
         </nav>
       </div>
     </header>

@@ -26,3 +26,7 @@ Thumbs.db
 # session WhatsApp et lectures locales
 sessions/
 web/data/
+
+# profils et sessions open-wa locaux
+openwa/.open-wa/
+openwa/_IGNORE_*/
