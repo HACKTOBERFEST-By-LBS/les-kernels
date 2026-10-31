@@ -64,12 +64,25 @@ Départage : critère 2 (innovation), puis critère 4 (démo).
 - Poussez sur la branche `main` (le wall lit la branche par défaut).
 - **Ne commitez jamais de clé d'API.** Copiez `.env.example` en `.env`, mettez-y votre `GEMINI_API_KEY`, et gardez `.env` hors de git (déjà dans `.gitignore`).
 
+## Alerte Marché — ce que fait notre projet
+
+Canal : site Next.js, et un numéro WhatsApp relié par QR. Les deux passent par le même cerveau (`web/lib/handle-message.ts`).
+
+**Comment un SMS est jugé**
+
+1. Gemma lit le texte ou la capture, recopie le SMS, repère l'expéditeur, le montant, le numéro à payer et le type d'arnaque (`web/lib/gemma.ts`).
+2. Des règles fixes repassent derrière Gemma (`web/lib/rules.ts`) : demande de code ou de PIN, demande de renvoi, frais pour un gain, lien, avis « T-Money » venant d'un numéro de téléphone. Une règle peut rendre le verdict plus sévère, jamais plus doux.
+3. La réponse commence toujours par **ARNAQUE**, **DOUTEUX** ou **NORMAL**, puis dit pourquoi et quoi faire.
+4. Si Gemma ne répond pas, une arnaque évidente est quand même signalée, avec la mention « analyse partielle ».
+
+**Mur des numéros** (`/numeros`) : un numéro signalé rouge par 4 personnes différentes en 48 h devient « Arnaqueur actif ». Une même personne ne compte qu'une fois.
+
+**Volet Apprendre** : `/apprendre`, puis texte, photo ou PDF du cours (les pages s'ajoutent), `/plan 12 novembre`, `/quiz`, `/resume`, `/stop`. Même en mode cours, un message qui ressemble à un SMS d'argent est analysé comme un SMS. Les modes cours se referment seuls après 2 h sans message.
+
 ## Démarrer
 
-Canal : site Next.js, et un numéro WhatsApp relié par QR.
-
 ```bash
-cp .env.example .env   # puis renseigner GEMINI_API_KEY
+cp .env.example .env   # renseigner GEMINI_API_KEY, et changer WA_API_KEY et OPEN_WA_WEBHOOK_SECRET
 cd web
 npm install
 npm run dev
@@ -77,7 +90,7 @@ npm run dev
 
 Le site s'ouvre sur http://localhost:3000. La clé est lue depuis le `.env` à la racine.
 
-WhatsApp, dans un second terminal :
+WhatsApp, dans un second terminal (open-wa lit le même `.env`) :
 
 ```bash
 cd openwa
@@ -86,3 +99,14 @@ npm start
 ```
 
 Scanne le QR avec le numéro de l'équipe. La page Admin du site montre si la session est connectée. Avec Docker : `docker compose up` à la racine.
+
+## Vérifier
+
+```bash
+cd web
+npm run typecheck
+npm run lint
+npm test
+```
+
+Les tests couvrent les règles anti-arnaque, la sortie du mode cours et le mur des numéros. L'audit complet et le suivi des corrections sont dans `AUDIT.md`.

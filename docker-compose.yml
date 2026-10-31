@@ -2,6 +2,8 @@ services:
   openwa:
     image: openwa/wa-automate:latest
     init: true
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     ports:
       - "127.0.0.1:8080:8080"
     environment:

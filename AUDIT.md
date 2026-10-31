@@ -370,3 +370,37 @@ Il reste environ 1 h 30 de code avant 15 h 45. Les lots 0 à 3 tiennent dans ce 
 - **Ce que j'ai survolé par confort :** le dashboard et le serveur MCP qu'open-wa démarre peut-être par défaut. Je n'ai pas vérifié s'ils écoutent et s'ils exposent la session. Je n'ai pas non plus vérifié ce que le mot « tontine » dans `DANGER` provoque comme faux positifs sur de vrais messages.
 - **Où je me suis fié à une apparence :** la route `/api/messages/sendText` et l'existence d'un modèle `gemma-4-26b-a4b-it`. Les deux sont plausibles, aucun n'a été exécuté.
 - **Le problème que j'étais tenté de ne pas signaler :** que le cœur du produit n'a, selon toute la preuve disponible sur cette machine, jamais tourné. C'est désagréable à 1 h 30 de la fin, mais c'est le premier risque de la démo.
+
+---
+
+## Suivi des corrections (31 octobre, 15 h 15)
+
+Vérifié après chaque lot : `tsc` et `eslint` sans erreur, 17 tests `node --test` au vert, `next build` réussi, routes testées sur le serveur compilé (400 sur JSON invalide, 415 sur type de fichier refusé, 401 sur webhook sans secret, `/api/reports` sans `chatId` ni texte d'utilisateur).
+
+| Problème | État | Où |
+| --- | --- | --- |
+| P0 Gemma jamais exécuté | **Ouvert** : pas de clé sur la machine. La consigne passe désormais dans le message (plus de `systemInstruction`) et le modèle est réglable par `GEMMA_MODEL` | `web/lib/gemma.ts` |
+| P1 Verdict absent de la réponse | Corrigé : titre ARNAQUE / DOUTEUX / NORMAL produit par le code, raisons affichées | `web/lib/rules.ts`, `web/lib/handle-message.ts`, `web/components/verdict-card.tsx` |
+| P2 Fuite de numéros, chat d'autrui | Corrigé : `/api/reports` filtré, sessions web préfixées `web:` | `web/app/api/reports/route.ts`, `web/app/api/chat/route.ts` |
+| P3 Effacement du store | Corrigé : écriture via fichier temporaire, fichier illisible mis de côté au lieu d'être écrasé | `web/lib/store.ts` |
+| P4 Mode piège | Corrigé : SMS d'argent analysé même en mode cours, expiration après 2 h, vrai mode affiché | `web/lib/rules.ts`, `web/lib/handle-message.ts`, `web/app/page.tsx` |
+| P5 Captures WhatsApp | Corrigé dans le code, **non testé** contre un vrai open-wa : téléchargement par `/api/media/decrypt` | `web/lib/openwa.ts`, `web/app/api/webhooks/openwa/route.ts` |
+| P6 Pas de contrôle du format officiel | Corrigé en partie : règles déterministes + expéditeur demandé ou lu ; pas de modèle exact des SMS officiels (aucune source vérifiée) | `web/lib/rules.ts` |
+| P7 Mur gonflable | Corrigé : une personne compte une fois, anti double clic | `web/lib/reputation.ts`, `web/app/page.tsx` |
+| P8 Relais WhatsApp ouvert | Atténué : expéditeur validé, avertissement si secret par défaut ; il faut changer le secret dans `.env` | `web/app/api/webhooks/openwa/route.ts` |
+| P9 Secret désynchronisé | Corrigé : open-wa lit le `.env` racine | `openwa/wa.config.mjs` |
+| P10 Erreurs brutes | Corrigé : message français fixe, détail dans les logs | `web/lib/handle-message.ts` |
+| P11 Filet de sécurité faible | Corrigé : les règles peuvent forcer rouge, lisent aussi le texte transcrit des captures | `web/lib/rules.ts`, `web/lib/gemma.ts` |
+| P12 Injection de consigne | Atténué : texte encadré et déclaré comme donnée ; les règles ne peuvent pas être contredites par le modèle | `web/lib/gemma.ts` |
+| P13 « Gangs » démo seulement | Corrigé : regroupement par type d'arnaque fermé | `web/lib/reputation.ts` |
+| P14 Écrasement concurrent du chat | **Ouvert** | — |
+| P15 Volet cours | Corrigé : PDF, pages ajoutées, date du jour dans le plan | `web/lib/gemma.ts`, `web/lib/handle-message.ts`, `web/app/page.tsx` |
+| P16 Photos trop lourdes | Corrigé : redimensionnement à 1600 px dans le navigateur | `web/app/page.tsx` |
+| P17 `chain` par route | Corrigé : file d'attente partagée sur `globalThis` | `web/lib/store.ts` |
+| P18 Docker | Corrigé : `WA_HOST` respecté, `host.docker.internal` sous Linux | `openwa/wa.config.mjs`, `docker-compose.yml` |
+| P19 à P21 Libellés, erreurs d'écran, accessibilité | Corrigé | pages et composants |
+| P22 Code mort | Corrigé : `isOfficialSender`, `attente_message`, SVG et README du gabarit supprimés | — |
+| P23 Aucun test | Corrigé en partie : 17 tests sur les règles, le mode cours et le mur ; rien sur les routes | `web/tests/` |
+| P24 Store illimité | **Ouvert** (après le hackathon) | — |
+
+Ajout hors audit : si Gemma tombe en cours de route, une arnaque évidente reste signalée par les règles, marquée « analyse partielle ». Sans clé du tout, le site refuse de fonctionner : Gemma reste indispensable, comme l'exige le sujet.
