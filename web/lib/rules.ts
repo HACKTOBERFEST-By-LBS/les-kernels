@@ -1,4 +1,4 @@
-import type { Scan, ScamType, Verdict } from "./types";
+import type { ChatMode, Scan, ScamType, Verdict } from "./types";
 
 export type RuleHit = { verdict: Verdict; type: ScamType; raison: string };
 
@@ -141,6 +141,18 @@ export function applyRules(text: string, scan: Scan): Scan {
     messageSimple: raised || !scan.messageSimple ? DEFAULT_MESSAGE[verdict] : scan.messageSimple,
     actions: raised || scan.actions.length === 0 ? DEFAULT_ACTIONS[verdict] : scan.actions,
   };
+}
+
+const MONEY_WORDS = /fcfa|\bcfa\b|solde|t-?\s?money|moov|flooz|mobile money|transfert|d[ée]p[ôo]t/i;
+
+export function looksLikeMoneySms(text: string) {
+  return evaluateRules(text).length > 0 || MONEY_WORDS.test(text);
+}
+
+export function scamOverridesCourse(mode: ChatMode, text: string) {
+  if (!text || mode === "scanner") return false;
+  if (mode === "attente_cours") return evaluateRules(text).some((hit) => hit.verdict === "rouge");
+  return looksLikeMoneySms(text);
 }
 
 export function headline(verdict: Verdict) {

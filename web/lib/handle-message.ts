@@ -9,7 +9,7 @@ import {
   scanMessage,
 } from "./gemma";
 import { heatFor, heatLabel, normalizeNumber, recentRedReports } from "./reputation";
-import { headline } from "./rules";
+import { headline, scamOverridesCourse } from "./rules";
 import { addReport, getChat, readStore, saveChat } from "./store";
 import type { ChatState, HandleResult, PublicReport, Report, Source } from "./types";
 
@@ -100,8 +100,17 @@ export function formatReport(pub: PublicReport) {
   return lines.join("\n");
 }
 
+export const MODE_TTL_MS = 2 * 60 * 60 * 1000;
+
+function freshChat(chatId: string, now = Date.now()): ChatState {
+  const chat = getChat(chatId);
+  if (chat.mode === "scanner") return chat;
+  const idle = now - new Date(chat.updatedAt).getTime();
+  return idle > MODE_TTL_MS ? { ...chat, mode: "scanner", quizQuestion: "", quizAnswer: "" } : chat;
+}
+
 export async function handleMessage(incoming: Incoming): Promise<HandleResult> {
-  const chat = getChat(incoming.chatId);
+  const chat = freshChat(incoming.chatId);
   const text = incoming.text.trim();
   const command = text ? parseCommand(text) : null;
 
@@ -129,7 +138,7 @@ export async function handleMessage(incoming: Incoming): Promise<HandleResult> {
       return reply(
         next,
         next.mode === "apprendre"
-          ? "Le cours est prêt.\n/plan — le calendrier\n/quiz — une question\n/resume — la fiche\n/stop — revenir aux arnaques\n\nTu peux aussi envoyer un nouveau cours."
+          ? "Le cours est prêt.\n/plan — le calendrier\n/quiz — une question\n/resume — la fiche\n/stop — revenir aux arnaques\n\nEnvoie d'autres pages pour compléter le cours."
           : "Mode cours. Envoie ton texte ou une photo de tes notes.",
       );
     }
@@ -165,14 +174,34 @@ export async function handleMessage(incoming: Incoming): Promise<HandleResult> {
       return reply(next, await makeResume(chat.courseText));
     }
 
+    if (scamOverridesCourse(chat.mode, text)) {
+      const result = await analyze({ ...chat, mode: "scanner" }, incoming);
+      return {
+        ...result,
+        reply: `${result.reply}\n\n(J'ai lu ce message comme un SMS d'argent, pas comme ton cours. Le cours est gardé : /apprendre pour y revenir.)`,
+      };
+    }
+
     if (chat.mode === "attente_cours" || (chat.mode === "apprendre" && (incoming.image || text.length > 80))) {
-      const courseText = await extractCourse(text, incoming.image);
-      if (courseText.length < 20) {
+      const extracted = await extractCourse(text, incoming.image);
+      if (extracted.length < 20) {
         return reply(chat, "Je n'ai pas assez lu le cours. Renvoie un texte plus net.");
       }
+      const adding = chat.mode === "apprendre" && chat.courseText;
+      const courseText = adding ? `${chat.courseText}\n\n${extracted}`.slice(0, 16000) : extracted;
       const next = { ...chat, mode: "apprendre" as const, courseText };
       await saveChat(next);
-      return reply(next, "Cours reçu. /plan, /quiz, /resume, ou /stop pour le scanner.");
+      const truncated = adding && chat.courseText.length + extracted.length + 2 > 16000;
+      return reply(
+        next,
+        [
+          adding ? "Page ajoutée au cours." : "Cours reçu.",
+          truncated ? "Le cours est long : je garde le début." : "",
+          "/plan, /quiz, /resume, ou /stop pour le scanner.",
+        ]
+          .filter(Boolean)
+          .join("\n"),
+      );
     }
 
     if (chat.mode === "attente_date") {

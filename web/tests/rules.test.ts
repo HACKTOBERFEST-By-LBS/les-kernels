@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { applyRules, evaluateRules, headline } from "../lib/rules.ts";
+import { applyRules, evaluateRules, headline, scamOverridesCourse } from "../lib/rules.ts";
 import type { Scan } from "../lib/types.ts";
 import { EXAMPLES } from "../lib/examples.ts";
 
@@ -60,6 +60,18 @@ test("un avis T-Money envoyé depuis un numéro de téléphone est rouge", () =>
 
 test("les règles ne font jamais baisser un verdict rouge du modèle", () => {
   assert.equal(applyRules("Bonjour", scan({ verdict: "rouge" })).verdict, "rouge");
+});
+
+test("en plein quiz, un SMS d'arnaque est analysé au lieu d'être corrigé", () => {
+  assert.equal(scamOverridesCourse("attente_quiz", text("Dépôt par erreur")), true);
+  assert.equal(scamOverridesCourse("attente_date", text("Avis officiel")), true);
+  assert.equal(scamOverridesCourse("attente_quiz", "La photosynthèse produit de l'oxygène."), false);
+});
+
+test("pendant l'envoi d'un cours, seul un message clairement frauduleux est détourné", () => {
+  assert.equal(scamOverridesCourse("attente_cours", "Chapitre 2 : la monnaie, le FCFA et la BCEAO."), false);
+  assert.equal(scamOverridesCourse("attente_cours", text("Faux concours")), true);
+  assert.equal(scamOverridesCourse("scanner", text("Faux concours")), false);
 });
 
 test("le titre du verdict est fixé par le code", () => {

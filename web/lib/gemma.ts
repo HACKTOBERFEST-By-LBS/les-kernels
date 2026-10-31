@@ -182,7 +182,7 @@ export async function makePlan(courseText: string, examDate: string, weakTopics:
   return (
     await ask(
       "Tu fais un plan de révision en français simple. Compte les jours entre aujourd'hui et l'examen. Une ligne par jour, au plus dix lignes : si l'examen est plus loin, regroupe les jours. Pas de JSON.",
-      `Aujourd'hui : ${today()}\nExamen : ${examDate}\nNotions déjà ratées : ${weakTopics.join(", ") || "aucune"}\nCours :\n${courseText.slice(0, 8000)}`,
+      `Aujourd'hui : ${today()}\nExamen : ${examDate}\nNotions déjà ratées : ${weakTopics.join(", ") || "aucune"}\nCours :\n${courseText.slice(0, 16000)}`,
     )
   ).trim();
 }
@@ -190,7 +190,7 @@ export async function makePlan(courseText: string, examDate: string, weakTopics:
 export async function makeQuiz(courseText: string, weakTopics: string[]) {
   const raw = await askJson<{ question?: string; answer?: string }>(
     "Tu poses une seule question de révision. Réponds uniquement en JSON : {\"question\":\"\",\"answer\":\"\"}. La question est en français simple. La réponse attendue tient en une phrase.",
-    `Reviens d'abord sur les notions ratées : ${weakTopics.join(", ") || "aucune"}.\nCours :\n${courseText.slice(0, 8000)}`,
+    `Reviens d'abord sur les notions ratées : ${weakTopics.join(", ") || "aucune"}.\nCours :\n${courseText.slice(0, 16000)}`,
   );
   return {
     question: String(raw.question ?? "").trim(),
@@ -214,7 +214,7 @@ export async function makeResume(courseText: string) {
   return (
     await ask(
       "Tu rédiges une fiche de révision. Cinq lignes maximum, français simple, sans JSON.",
-      courseText.slice(0, 8000),
+      courseText.slice(0, 16000),
     )
   ).trim();
 }
