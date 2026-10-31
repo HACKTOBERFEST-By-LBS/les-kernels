@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8" />
+<title>Fiche démo — Alerte Marché</title>
+<style>
+  @page { size: A4; margin: 12mm 13mm; }
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: "Segoe UI", Arial, sans-serif; color: #1d1914; font-size: 11px; line-height: 1.35; }
+  h1 { font-size: 22px; margin: 0; letter-spacing: -0.3px; }
+  h2 { font-size: 13px; margin: 11px 0 4px; border-bottom: 1.5px solid #1d1914; padding-bottom: 1px; }
+  p { margin: 3px 0; }
+  .sub { color: #5c5348; margin-top: 2px; }
+  .row { display: flex; gap: 8px; margin-top: 6px; }
+  .step { flex: 1; border: 1px solid #e4d8c4; border-radius: 8px; padding: 6px 8px; }
+  .time { font-weight: 800; color: #9f1d1d; font-size: 10px; text-transform: uppercase; letter-spacing: .04em; }
+  .say { font-style: italic; }
+  table { width: 100%; border-collapse: collapse; margin-top: 3px; }
+  td, th { text-align: left; vertical-align: top; padding: 3px 6px; border-bottom: 1px solid #e4d8c4; }
+  th { font-size: 10px; text-transform: uppercase; letter-spacing: .04em; color: #5c5348; }
+  code { font-family: Consolas, monospace; font-size: 10.5px; background: #f6f0e6; padding: 0 3px; border-radius: 3px; }
+  .sms { font-family: Consolas, monospace; font-size: 10px; background: #f6f0e6; border-radius: 6px; padding: 4px 6px; margin: 2px 0 6px; }
+  .tag { font-weight: 800; }
+  .rouge { color: #9f1d1d; }
+  .vert { color: #1f6b45; }
+  .warn { background: #fff4e0; border-radius: 6px; padding: 5px 8px; margin-top: 4px; }
+  ul { margin: 3px 0; padding-left: 16px; }
+  li { margin: 1px 0; }
+  .two { display: flex; gap: 14px; }
+  .two > div { flex: 1; }
+</style>
+</head>
+<body>
+  <h1>Alerte Marché — fiche de démo (3 min)</h1>
+  <p class="sub">Hackathon Build with Gemma · Lomé · Site : <b>http://localhost:3000</b> · WhatsApp : le numéro de l'équipe (déjà connecté)</p>
+
+  <h2>Avant de monter sur scène (30 secondes)</h2>
+  <ul>
+    <li>Ouvrir <b>http://localhost:3000</b> et <b>http://localhost:3000/numeros</b> dans deux onglets.</li>
+    <li>Sur Numéros, cliquer <b>« Afficher l'exemple du jury »</b>. Sans ça, « signalé par 4 personnes » n'apparaît pas.</li>
+    <li>Gemma met <b>30 à 40 secondes</b> à répondre. Lancer l'analyse, puis parler pendant l'attente. Ne pas relancer.</li>
+  </ul>
+
+  <h2>Déroulé</h2>
+  <div class="row">
+    <div class="step"><div class="time">0:00 · 20 s</div><p class="say">« Qui a déjà reçu : j'ai envoyé de l'argent par erreur, renvoie-le-moi ? »</p><p>Le problème : tout le monde utilise le Mobile Money, personne n'a le temps de vérifier.</p></div>
+    <div class="step"><div class="time">0:20 · 25 s</div><p>Bouton <b>Avis officiel</b>, expéditeur <b>TMONEY</b>, Analyser.</p><p>Attendu : <span class="tag vert">NORMAL</span>. Dire : « Un vrai avis vient d'un nom, annonce une opération déjà faite, et ne demande rien. »</p></div>
+    <div class="step"><div class="time">0:45 · 45 s</div><p>Bouton <b>Dépôt par erreur</b>, Analyser.</p><p>Attendu : <span class="tag rouge">ARNAQUE</span>, « déjà signalé par 4 personnes », « Arnaqueur actif ».</p><p>Dire : « Même si l'IA se trompait, nos règles bloquent tout renvoi d'argent. »</p></div>
+  </div>
+  <div class="row">
+    <div class="step"><div class="time">1:30 · 30 s</div><p>Bouton <b>Presque officiel</b>.</p><p>Attendu : <span class="tag rouge">ARNAQUE</span> (lien + code + numéro privé).</p><p>Dire : « Il copie le style de T-Money. Le lien et le code le trahissent. »</p></div>
+    <div class="step"><div class="time">2:00 · 40 s</div><p>Depuis un autre téléphone, envoyer le SMS « dépôt par erreur » au numéro de l'équipe.</p><p>La réponse arrive sur WhatsApp. Montrer <b>/numeros</b> : le numéro et « même arnaque, plusieurs numéros ».</p></div>
+    <div class="step"><div class="time">2:40 · 20 s</div><p>Bouton <b>« J'ai déjà payé, que faire ? »</b>.</p><p>Clore : « Chaque signalement protège le suivant. Le bot apprend des arnaques déjà vues. »</p></div>
+  </div>
+
+  <h2>Textes prêts à copier (tous fictifs)</h2>
+  <p><b>1. Avis officiel → NORMAL</b> · expéditeur <code>TMONEY</code></p>
+  <div class="sms">T-Money: vous avez recu 15000 FCFA de A. K. Solde: 22000 FCFA. Ref: TM000000. Merci.</div>
+  <p><b>2. Dépôt par erreur → ARNAQUE</b> · expéditeur <code>+228 00 00 00 12</code></p>
+  <div class="sms">Bonjour, j'ai envoye 50000 FCFA par erreur sur votre numero. Renvoyez sur +228 00 00 00 12, je vous laisse 5000.</div>
+  <p><b>3. Faux concours → ARNAQUE</b> · expéditeur <code>+228 00 00 00 98</code></p>
+  <div class="sms">Félicitations, vous avez gagné 200000 FCFA avec Moov. Payez 2000 FCFA de frais de retrait sur +228 00 00 00 98 puis ouvrez https://moov-gain.example</div>
+  <p><b>4. Presque officiel → ARNAQUE</b> · expéditeur <code>+228 00 00 00 77</code></p>
+  <div class="sms">Vous avez recu 15000 FCFA de K. A. Confirmez sur https://t-money-verif.example et envoyez le code recu au +228 00 00 00 77.</div>
+
+  <div class="two">
+    <div>
+      <h2>Comment ça juge (à dire si on demande)</h2>
+      <ul>
+        <li><b>Gemma</b> lit le message avec 13 exemples annotés sous les yeux.</li>
+        <li><b>Des règles fixes</b> repassent derrière : code, PIN, « renvoyez », frais, lien, code *…# vers un numéro, faux proche, message « officiel » venu d'un numéro. Elles peuvent durcir le verdict, jamais l'adoucir.</li>
+        <li><b>Mémoire collective</b> : un message proche d'arnaques déjà signalées ne peut plus être « normal » à partir de 2 personnes.</li>
+        <li>Le premier mot (ARNAQUE, DOUTEUX, NORMAL) est écrit par notre code, pas par l'IA.</li>
+        <li>Au-delà des opérateurs : banques, colis, emploi, prêts, faux proches.</li>
+      </ul>
+      <h2>Codes WhatsApp</h2>
+      <table>
+        <tr><td><code>/conseils</code></td><td>les 5 réflexes</td></tr>
+        <tr><td><code>/victime</code></td><td>j'ai déjà payé</td></tr>
+        <tr><td><code>/apprendre</code> <code>/plan</code> <code>/quiz</code> <code>/resume</code></td><td>volet cours</td></tr>
+        <tr><td><code>/stop</code></td><td>retour au scanner</td></tr>
+      </table>
+      <p>Sans code, tout message est analysé. Le volet cours ne s'ouvre qu'avec une commande.</p>
+    </div>
+    <div>
+      <h2>Les 5 réflexes</h2>
+      <ol>
+        <li>Personne de T-Money, Moov ou de la banque ne demande un code ou un PIN.</li>
+        <li>Un dépôt « par erreur » ne se renvoie pas : on vérifie son vrai solde.</li>
+        <li>Les vrais avis viennent d'un nom (TMONEY, MOOV, la banque), pas d'un numéro.</li>
+        <li>Aucun frais pour un gain, un colis, un emploi ou un prêt.</li>
+        <li>Devant l'urgence : attendre et appeler quelqu'un de confiance.</li>
+      </ol>
+      <h2>Si quelque chose coince</h2>
+      <div class="warn">
+        <p><b>« Je n'ai pas pu lire ce message »</b> : l'API Google a un raté passager. Relancer une fois. Une arnaque évidente est quand même signalée par les règles (« analyse partielle »).</p>
+        <p><b>WhatsApp ne répond pas</b> : continuer sur le site, il fait exactement la même analyse. Ne pas perdre de temps à relancer le relais.</p>
+        <p><b>Le mur est vide</b> : onglet Numéros, bouton « Afficher l'exemple du jury ».</p>
+      </div>
+      <h2>À ne pas dire</h2>
+      <ul>
+        <li>Le bot ne voit pas le vrai solde : c'est pour ça qu'il dit de le vérifier.</li>
+        <li>Tous les numéros montrés sont fictifs (+228 00 00 00 xx).</li>
+        <li>Ne pas ouvrir la page admin ni montrer le fichier .env.</li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
