@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { applyRules, evaluateRules, headline, rulesOnlyScan, scamOverridesCourse } from "../lib/rules.ts";
+import { applyRules, evaluateRules, headline, mentionedPhone, rulesOnlyScan, scamOverridesCourse } from "../lib/rules.ts";
 import type { Scan } from "../lib/types.ts";
 import { EXAMPLES } from "../lib/examples.ts";
 
@@ -82,6 +82,10 @@ test("si Gemma tombe, une arnaque évidente reste signalée rouge, un message ne
   assert.equal(fallback?.verdict, "rouge");
   assert.equal(fallback?.numero, "+228 00 00 00 12");
   assert.equal(rulesOnlyScan(text("Avis officiel")), null);
+});
+
+test("un numéro écrit dans la capture est retrouvé même si le modèle l'oublie", () => {
+  assert.equal(mentionedPhone(text("Dépôt par erreur")), "+228 00 00 00 12");
 });
 
 test("le titre du verdict est fixé par le code", () => {

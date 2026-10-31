@@ -10,7 +10,7 @@ import {
 } from "./gemma";
 import { adviceFor, REFLEXES, VICTIM_STEPS } from "./knowledge";
 import { heatFor, heatLabel, normalizeNumber, reportersFor, similarReports } from "./reputation";
-import { applyMemory, headline, rulesOnlyScan, scamOverridesCourse } from "./rules";
+import { applyMemory, headline, mentionedPhone, rulesOnlyScan, scamOverridesCourse } from "./rules";
 import { addReport, getChat, readStore, saveChat } from "./store";
 import type { ChatState, HandleResult, PublicReport, Report, Scan, Source } from "./types";
 
@@ -68,7 +68,12 @@ async function analyze(chat: ChatState, incoming: Incoming): Promise<HandleResul
   }
   const memory = text ? before : similarReports(reports, scan.texteLu, chat.chatId);
   scan = applyMemory(scan, memory.people);
-  const numero = normalizeNumber(scan.numero);
+  const numero = normalizeNumber(
+    scan.numero ||
+      (scan.verdict === "rouge"
+        ? mentionedPhone([text, scan.texteLu, scan.demande].join("\n"))
+        : ""),
+  );
   const report: Report = {
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),

@@ -153,6 +153,10 @@ const DEFAULT_ACTIONS: Record<Verdict, string[]> = {
   vert: ["Vérifie quand même ton solde avant de dépenser l'argent."],
 };
 
+export function mentionedPhone(text: string) {
+  return new RegExp(PHONE).exec(text)?.[0] ?? "";
+}
+
 export function isPhoneSender(expediteur: string) {
   const digits = expediteur.replace(/\D/g, "");
   return digits.length >= 8 && !/[a-z]{3,}/i.test(expediteur);

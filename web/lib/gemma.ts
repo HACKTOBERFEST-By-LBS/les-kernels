@@ -71,11 +71,17 @@ async function ask(
     throw new ConfigError("Ajoute GEMINI_API_KEY dans le fichier .env à la racine, puis relance le site.");
   }
 
+  const picture = image
+    ? {
+        mimeType: image.mimeType,
+        data: image.data.replace(/^data:[^;]+;base64,/, "").replace(/\s/g, ""),
+      }
+    : undefined;
   const parts: Array<
     { text: string } | { inlineData: { mimeType: string; data: string } }
-  > = [{ text: system }];
-  if (image) parts.push({ inlineData: image });
-  parts.push({ text: prompt });
+  > = picture
+    ? [{ inlineData: picture }, { text: `${system}\n\n${prompt}` }]
+    : [{ text: system }, { text: prompt }];
 
   for (let attempt = 0; ; attempt += 1) {
     try {
@@ -151,13 +157,14 @@ export async function scanMessage(
     "Lis ce message et remplis le JSON :",
     '{"verdict":"vert|orange|rouge","type":"","expediteur":"","texte_lu":"","numero":"","montant":"","demande":"","lien":"","raisons":[],"suite_arnaque":"","message_simple":"","actions":[]}',
     sender ? `Expéditeur indiqué par l'utilisateur : ${sender}` : "",
-    image ? "Le message est dans l'image." : "",
-    text ? `Texte :\n<<<\n${text}\n>>>` : "",
+    image ? "Le message à juger est dans l'image. Recopie-le dans texte_lu." : "",
+    text ? (image ? `Texte collé avec l'image :\n${text}` : `Texte :\n<<<\n${text}\n>>>`) : "",
   ]
     .filter(Boolean)
     .join("\n\n");
 
-  const raw = await askJson<RawScan>(`${SCAN_SYSTEM}\n\n${examplesPrompt()}`, prompt, image);
+  const system = image ? SCAN_SYSTEM : `${SCAN_SYSTEM}\n\n${examplesPrompt()}`;
+  const raw = await askJson<RawScan>(system, prompt, image);
   const texteLu = String(raw.texte_lu ?? "").slice(0, 2000);
   const scan: Scan = {
     verdict: asVerdict(raw.verdict),
