@@ -277,6 +277,21 @@ export default function HomePage() {
               {example.label}
             </button>
           ))}
+          <h2 className="mt-3 text-sm font-semibold">Se protéger</h2>
+          <button
+            type="button"
+            onClick={() => void send("/conseils", false)}
+            className="min-h-11 rounded-2xl border border-line bg-card px-4 py-3 text-left text-sm hover:border-[#1d1914]"
+          >
+            Les 5 réflexes anti-arnaque
+          </button>
+          <button
+            type="button"
+            onClick={() => void send("/victime", false)}
+            className="min-h-11 rounded-2xl border border-[#9f1d1d] bg-card px-4 py-3 text-left text-sm text-[#9f1d1d] hover:bg-[#fde8e4]"
+          >
+            J&apos;ai déjà payé, que faire ?
+          </button>
           <button
             type="button"
             onClick={() => void send("/menu", false)}

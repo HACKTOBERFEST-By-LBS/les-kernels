@@ -102,6 +102,76 @@ export const EXAMPLES_ANNOTES: Example[] = [
   },
 ];
 
+const ADVICE: Record<ScamType, string[]> = {
+  depot_par_erreur: [
+    "Ne renvoie rien : vérifie ton vrai solde dans ton compte, le dépôt n'existe sans doute pas.",
+    "Un vrai dépôt par erreur se règle par l'opérateur, jamais par un particulier.",
+  ],
+  faux_gain: [
+    "Tu ne peux pas gagner à un jeu auquel tu n'as pas joué.",
+    "Ne paie aucun frais pour recevoir un gain.",
+  ],
+  faux_agent: [
+    "Les vrais avis arrivent sous le nom TMONEY, MOOV ou de ta banque, pas d'un numéro.",
+    "Vérifie ton solde toi-même dans ton compte.",
+  ],
+  demande_code: [
+    "Ne donne jamais ton code ou ton PIN, même à un « agent ».",
+    "Ne tape pas un code avec * et # que tu n'as pas choisi toi-même.",
+  ],
+  lien_piege: ["N'ouvre pas le lien.", "Passe par l'application officielle ou par l'agence."],
+  banque_bloquee: [
+    "Ne donne aucune information par SMS ou par lien.",
+    "Appelle ta banque avec le numéro au dos de ta carte, ou va en agence.",
+  ],
+  faux_colis: [
+    "Si tu n'attends pas de colis, ignore le message.",
+    "Ne paie jamais de frais de livraison à un numéro privé.",
+  ],
+  faux_emploi: [
+    "Un vrai employeur ne fait jamais payer l'embauche.",
+    "Cherche l'entreprise toi-même avant de répondre.",
+  ],
+  faux_pret: [
+    "Ne paie jamais de frais avant de recevoir un prêt.",
+    "Passe par une banque ou une microfinance connue.",
+  ],
+  urgence_proche: [
+    "Appelle ton proche sur son ancien numéro avant d'envoyer quoi que ce soit.",
+    "Pose-lui une question que lui seul connaît.",
+  ],
+  autre: ["Ne fais rien dans l'urgence.", "Demande l'avis d'un proche avant d'envoyer de l'argent."],
+  aucune: ["Ne fais rien dans l'urgence.", "Demande l'avis d'un proche avant d'envoyer de l'argent."],
+};
+
+export function adviceFor(verdict: Verdict, type: ScamType, modelActions: string[]) {
+  if (verdict === "vert") {
+    return modelActions.length ? modelActions.slice(0, 2) : ["Vérifie quand même ton solde avant de dépenser l'argent."];
+  }
+  return [...new Set([...ADVICE[type], ...modelActions])].slice(0, 3);
+}
+
+export const REFLEXES = [
+  "Les 5 réflexes anti-arnaque :",
+  "1. Personne de T-Money, Moov ou de ta banque ne te demande ton code ou ton PIN.",
+  "2. Un dépôt reçu « par erreur » ne se renvoie pas : vérifie ton vrai solde.",
+  "3. Les vrais avis viennent d'un nom (TMONEY, MOOV, ta banque), pas d'un numéro.",
+  "4. Aucun frais à payer pour un gain, un colis, un emploi ou un prêt.",
+  "5. Devant l'urgence, attends et appelle quelqu'un de confiance.",
+  "",
+  "Un doute ? Envoie-moi le SMS.",
+].join("\n");
+
+export const VICTIM_STEPS = [
+  "Tu as déjà payé ou donné ton code ? Agis vite :",
+  "1. Arrête tout échange avec l'escroc. N'envoie plus rien.",
+  "2. Préviens tout de suite ton opérateur ou ta banque par son canal officiel (agence ou service client officiel) pour bloquer l'opération ou ton compte.",
+  "3. Si tu as donné ton code ou ton PIN, change-le maintenant.",
+  "4. Garde les preuves : captures du SMS, numéro, références de transaction.",
+  "5. Porte plainte au commissariat avec ces preuves.",
+  "6. Envoie-moi le SMS : le numéro sera signalé aux autres.",
+].join("\n");
+
 export function examplesPrompt() {
   return [
     "Exemples annotés (fictifs) pour t'aider à juger :",

@@ -78,6 +78,11 @@ export function VerdictCard({ report }: { report: PublicReport }) {
           </ul>
         </div>
       ) : null}
+      {report.verdict === "rouge" ? (
+        <p className={`mt-4 text-sm font-semibold ${hunted ? "text-white" : "text-danger"}`}>
+          Déjà payé ou donné ton code ? Envoie /victime.
+        </p>
+      ) : null}
     </article>
   );
 }

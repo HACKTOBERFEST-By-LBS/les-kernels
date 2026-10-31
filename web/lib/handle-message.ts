@@ -8,6 +8,7 @@ import {
   makeResume,
   scanMessage,
 } from "./gemma";
+import { adviceFor, REFLEXES, VICTIM_STEPS } from "./knowledge";
 import { heatFor, heatLabel, normalizeNumber, reportersFor } from "./reputation";
 import { headline, rulesOnlyScan, scamOverridesCourse } from "./rules";
 import { addReport, getChat, readStore, saveChat } from "./store";
@@ -80,7 +81,7 @@ async function analyze(chat: ChatState, incoming: Incoming): Promise<HandleResul
     raisons: scan.raisons,
     suiteArnaque: scan.suiteArnaque,
     messageSimple: scan.messageSimple,
-    actions: scan.actions,
+    actions: adviceFor(scan.verdict, scan.type, scan.actions),
   };
   await addReport(report);
   const next = { ...chat, mode: "scanner" as const };
@@ -101,6 +102,7 @@ export function formatReport(pub: PublicReport) {
     lines.push("", `${heatLabel(pub.heat)} — signalé par ${pub.count} personne${pub.count > 1 ? "s" : ""} en 48 h.`);
   }
   if (pub.actions.length) lines.push("", "À faire :", ...pub.actions.map((action) => `• ${action}`));
+  if (pub.verdict === "rouge") lines.push("", "Déjà payé ou donné ton code ? Envoie /victime.");
   return lines.join("\n");
 }
 
@@ -120,6 +122,8 @@ export async function handleMessage(incoming: Incoming): Promise<HandleResult> {
 
   try {
     if (command?.type === "menu") return reply(chat, menuText());
+    if (command?.type === "conseils") return reply(chat, REFLEXES);
+    if (command?.type === "victime") return reply(chat, VICTIM_STEPS);
     if (command?.type === "unknown") {
       return reply(chat, "Commande inconnue. Envoie / pour voir les options.");
     }

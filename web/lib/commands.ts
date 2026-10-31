@@ -6,6 +6,8 @@ export type Command =
   | { type: "quiz" }
   | { type: "resume" }
   | { type: "stop" }
+  | { type: "conseils" }
+  | { type: "victime" }
   | { type: "unknown"; name: string };
 
 const NAMES = new Map<string, Exclude<Command["type"], "unknown" | "plan">>([
@@ -19,6 +21,10 @@ const NAMES = new Map<string, Exclude<Command["type"], "unknown" | "plan">>([
   ["resume", "resume"],
   ["résumé", "resume"],
   ["stop", "stop"],
+  ["conseils", "conseils"],
+  ["conseil", "conseils"],
+  ["victime", "victime"],
+  ["arnaque", "victime"],
 ]);
 
 export function parseCommand(text: string): Command | null {
@@ -45,6 +51,8 @@ export function menuText() {
     "Envoie un SMS, une capture, ou choisis :",
     "",
     "/verifier — je lis un message",
+    "/conseils — les 5 réflexes anti-arnaque",
+    "/victime — j'ai déjà payé, que faire ?",
     "/apprendre — réviser un cours",
     "/plan — plan jusqu'à l'examen",
     "/quiz — une question",
