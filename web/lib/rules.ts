@@ -6,7 +6,7 @@ type Rule = RuleHit & { test: (text: string, expediteur: string) => boolean };
 
 const END = "(?![A-Za-zÀ-ÿ0-9])";
 const PHONE = String.raw`(?:\+?228[\s.-]?)?\d{2}[\s.-]?\d{2}[\s.-]?\d{2}[\s.-]?\d{2}`;
-const OPERATOR = /t-?\s?money|moov|flooz|togocom|mobile money|momo/i;
+const OFFICIAL_CLAIM = /t-?\s?money|moov|flooz|togocom|mobile money|momo|banque|bank|service client/i;
 
 function re(source: string) {
   return new RegExp(source, "i");
@@ -29,6 +29,21 @@ const CONTACT_NUMBER = re(
   String.raw`(appel(ez|le)|contact(ez|e)|[ée]cri(vez|s)|whatsapp|envo(yez|ie)|transf[eé]r(ez|e)|d[ée]pos(ez|e))${END}[^.\n]{0,30}${PHONE}`,
 );
 const USSD = /\*\d{2,4}(\*[\d*#]+)*#/;
+const USSD_TO_NUMBER = /\*\d{2,4}(\*\d+)*\*(228)?\d{8}(\*\d+)*#/;
+const BLOCKED = re(
+  String.raw`(compte|carte|sim|ligne|num[ée]ro)[^.\n]{0,40}(bloqu|suspendu|sera suspendu|d[ée]sactiv|ferm[ée]|r[ée]activ)`,
+);
+const URGENCY = re(String.raw`(urgent|imm[ée]diatement|sous 24 ?h|dans les 24|dernier d[ée]lai|avant ce soir)`);
+const PARCEL_FEES = re(String.raw`(colis|livraison|douane)[^\n]{0,80}(frais|pay\w*|r[ée]gl\w*)`);
+const JOB_FEES = re(
+  String.raw`(recrut\w*|emploi|embauche|travail [àa] domicile|offre d'emploi)[^\n]{0,100}(frais|inscription|pay\w*)`,
+);
+const LOAN_FEES = re(
+  String.raw`(pr[êe]t|cr[ée]dit rapide|cr[ée]dit sans)[^\n]{0,100}(frais de dossier|frais d'avance|pay(ez|er) d'abord|en avance)`,
+);
+const CLOSE_ONE = re(
+  String.raw`(nouveau num[ée]ro|chang[ée] de num[ée]ro|c'est moi)[\s\S]{0,150}?(envo[iy]\w*|transf[eé]r\w*|d[ée]pos\w*|pr[êe]te)`,
+);
 
 const RULES: Rule[] = [
   {
@@ -58,8 +73,50 @@ const RULES: Rule[] = [
   {
     verdict: "rouge",
     type: "faux_agent",
-    raison: "Le message dit venir de T-Money ou Moov mais il arrive d'un numéro de téléphone. Les vrais avis arrivent sous le nom de l'opérateur.",
-    test: (text, expediteur) => OPERATOR.test(text) && isPhoneSender(expediteur),
+    raison: "Le message dit venir d'un opérateur ou d'une banque mais il arrive d'un numéro de téléphone. Les vrais avis arrivent sous le nom de l'entreprise.",
+    test: (text, expediteur) => OFFICIAL_CLAIM.test(text) && isPhoneSender(expediteur),
+  },
+  {
+    verdict: "rouge",
+    type: "demande_code",
+    raison: "Ce code avec * et # contient un numéro de téléphone : le taper envoie ton argent à ce numéro.",
+    test: (text) => USSD_TO_NUMBER.test(text),
+  },
+  {
+    verdict: "rouge",
+    type: "faux_colis",
+    raison: "On te fait payer des frais pour un colis. Les faux colis bloqués sont une arnaque courante.",
+    test: (text) => PARCEL_FEES.test(text),
+  },
+  {
+    verdict: "rouge",
+    type: "faux_emploi",
+    raison: "On te fait payer pour un emploi. Un vrai employeur ne fait jamais payer l'embauche.",
+    test: (text) => JOB_FEES.test(text),
+  },
+  {
+    verdict: "rouge",
+    type: "faux_pret",
+    raison: "On te fait payer des frais avant un prêt. L'argent du prêt n'arrive jamais.",
+    test: (text) => LOAN_FEES.test(text),
+  },
+  {
+    verdict: "rouge",
+    type: "urgence_proche",
+    raison: "Un « proche » avec un nouveau numéro demande de l'argent. Appelle-le sur son ancien numéro avant tout.",
+    test: (text) => CLOSE_ONE.test(text),
+  },
+  {
+    verdict: "orange",
+    type: "banque_bloquee",
+    raison: "Le message menace de bloquer ton compte ou ta carte. Vérifie directement en agence ou dans l'application officielle.",
+    test: (text) => BLOCKED.test(text),
+  },
+  {
+    verdict: "orange",
+    type: "autre",
+    raison: "Le message te presse. L'urgence sert à t'empêcher de réfléchir.",
+    test: (text) => URGENCY.test(text),
   },
   {
     verdict: "orange",
