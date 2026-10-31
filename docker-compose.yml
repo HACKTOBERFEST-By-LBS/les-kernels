@@ -1,0 +1,27 @@
+services:
+  openwa:
+    image: openwa/wa-automate:latest
+    init: true
+    ports:
+      - "127.0.0.1:8080:8080"
+    environment:
+      W_A_V: "5.1.0"
+      WA_PORT: "8080"
+      WA_HOST: "0.0.0.0"
+      WA_SESSION_ID: alerte
+      WA_USER_DATA_DIR: /sessions/alerte
+      WA_API_KEY: ${WA_API_KEY:-hackathon-dev-key}
+      OPEN_WA_WEBHOOK_SECRET: ${OPEN_WA_WEBHOOK_SECRET:-hackathon-local-secret}
+      OPENWA_WEBHOOK_URL: http://host.docker.internal:3000/api/webhooks/openwa
+    volumes:
+      - ./sessions:/sessions
+      - ./openwa/wa.config.mjs:/openwa/wa.config.mjs:ro
+    command:
+      - --session-id
+      - alerte
+      - --host
+      - "0.0.0.0"
+      - --port
+      - "8080"
+      - --config
+      - /openwa/wa.config.mjs

@@ -1,0 +1,11 @@
+{
+  "name": "alerte-marche-wa",
+  "private": true,
+  "scripts": {
+    "start": "npx @open-wa/wa-automate@5.1.0 --config ./wa.config.mjs --session-id alerte --host 127.0.0.1 --port 8080"
+  },
+  "dependencies": {
+    "@open-wa/integration-webhook": "5.1.0",
+    "@open-wa/wa-automate": "5.1.0"
+  }
+}

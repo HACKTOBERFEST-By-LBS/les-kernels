@@ -66,8 +66,23 @@ Départage : critère 2 (innovation), puis critère 4 (démo).
 
 ## Démarrer
 
+Canal : site Next.js, et un numéro WhatsApp relié par QR.
+
 ```bash
 cp .env.example .env   # puis renseigner GEMINI_API_KEY
+cd web
+npm install
+npm run dev
 ```
 
-Complétez ensuite cette section avec le canal choisi (Web ou WhatsApp), les commandes pour lancer le projet et le lien de la démo.
+Le site s'ouvre sur http://localhost:3000. La clé est lue depuis le `.env` à la racine.
+
+WhatsApp, dans un second terminal :
+
+```bash
+cd openwa
+npm install
+npm start
+```
+
+Scanne le QR avec le numéro de l'équipe. La page Admin du site montre si la session est connectée. Avec Docker : `docker compose up` à la racine.

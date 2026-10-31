@@ -22,3 +22,7 @@ venv/
 .DS_Store
 Thumbs.db
 *.log
+
+# session WhatsApp et lectures locales
+sessions/
+web/data/
