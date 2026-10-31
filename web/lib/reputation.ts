@@ -1,6 +1,17 @@
-import type { Heat, Report } from "./types";
+import type { Heat, Report, ScamType } from "./types";
 
 export const WINDOW_MS = 48 * 60 * 60 * 1000;
+
+export const TYPE_LABEL: Record<ScamType, string> = {
+  depot_par_erreur: "Faux dépôt par erreur",
+  faux_gain: "Faux gain avec frais",
+  faux_agent: "Faux agent T-Money ou Moov",
+  demande_code: "Vol de code ou de PIN",
+  lien_piege: "Lien piégé",
+  autre: "Autre arnaque",
+  aucune: "",
+};
+
 export function normalizeNumber(raw: string) {
   const digits = raw.replace(/\D/g, "");
   if (digits.length === 8) return `+228${digits}`;
@@ -32,6 +43,17 @@ export function recentRedReports(reports: Report[], now = Date.now()) {
   );
 }
 
+export function reportersFor(reports: Report[], numero: string, now = Date.now()) {
+  const target = normalizeNumber(numero);
+  if (!target) return 0;
+  const people = new Set(
+    recentRedReports(reports, now)
+      .filter((report) => normalizeNumber(report.numero) === target)
+      .map((report) => report.chatId),
+  );
+  return people.size;
+}
+
 export function numberCards(reports: Report[], now = Date.now()) {
   const groups = new Map<string, Report[]>();
   for (const report of recentRedReports(reports, now)) {
@@ -46,12 +68,13 @@ export function numberCards(reports: Report[], now = Date.now()) {
     .map(([numero, items]) => {
       const ordered = [...items].sort((a, b) => b.createdAt.localeCompare(a.createdAt));
       const latest = ordered[0];
+      const count = new Set(items.map((item) => item.chatId)).size;
       return {
         numero,
-        count: ordered.length,
-        heat: heatFor(ordered.length),
+        count,
+        heat: heatFor(count),
         lastAt: latest.createdAt,
-        script: latest.script,
+        script: TYPE_LABEL[latest.typeArnaque] || TYPE_LABEL.autre,
         messageSimple: latest.messageSimple,
         exemple: ordered.every((item) => item.source === "demo"),
       };
@@ -60,20 +83,19 @@ export function numberCards(reports: Report[], now = Date.now()) {
 }
 
 export function gangs(reports: Report[], now = Date.now()) {
-  const groups = new Map<string, Set<string>>();
+  const groups = new Map<ScamType, Set<string>>();
   for (const report of recentRedReports(reports, now)) {
     const numero = normalizeNumber(report.numero);
-    const script = report.script.trim().toLowerCase();
-    if (!numero || script.length < 4) continue;
-    const set = groups.get(script) ?? new Set<string>();
+    if (!numero || report.typeArnaque === "aucune" || report.typeArnaque === "autre") continue;
+    const set = groups.get(report.typeArnaque) ?? new Set<string>();
     set.add(numero);
-    groups.set(script, set);
+    groups.set(report.typeArnaque, set);
   }
 
   return [...groups.entries()]
     .filter(([, numeros]) => numeros.size >= 2)
-    .map(([script, numeros]) => ({
-      script,
+    .map(([type, numeros]) => ({
+      script: TYPE_LABEL[type],
       numeros: [...numeros],
       count: numeros.size,
     }));

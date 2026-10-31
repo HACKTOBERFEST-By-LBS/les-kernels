@@ -8,7 +8,7 @@ import {
   makeResume,
   scanMessage,
 } from "./gemma";
-import { heatFor, heatLabel, normalizeNumber, recentRedReports } from "./reputation";
+import { heatFor, heatLabel, normalizeNumber, reportersFor } from "./reputation";
 import { headline, scamOverridesCourse } from "./rules";
 import { addReport, getChat, readStore, saveChat } from "./store";
 import type { ChatState, HandleResult, PublicReport, Report, Source } from "./types";
@@ -26,11 +26,7 @@ function reply(chat: ChatState, text: string, report: PublicReport | null = null
 }
 
 function countFor(numero: string) {
-  const normalized = normalizeNumber(numero);
-  if (!normalized) return 0;
-  return recentRedReports(readStore().reports).filter(
-    (report) => normalizeNumber(report.numero) === normalized,
-  ).length;
+  return reportersFor(readStore().reports, numero);
 }
 
 function toPublic(report: Report): PublicReport {
