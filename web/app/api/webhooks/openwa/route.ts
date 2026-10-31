@@ -3,7 +3,15 @@ import { sendWhatsAppText } from "@/lib/openwa";
 import { hasSeen, markSeen } from "@/lib/store";
 import { connection } from "next/server";
 
-const secret = process.env.OPEN_WA_WEBHOOK_SECRET || "hackathon-local-secret";
+const DEFAULT_SECRET = "hackathon-local-secret";
+const secret = process.env.OPEN_WA_WEBHOOK_SECRET?.trim() || DEFAULT_SECRET;
+const PRIVATE_CHAT = /^\d{6,20}@(c\.us|lid)$/;
+
+if (secret === DEFAULT_SECRET) {
+  console.warn(
+    "OPEN_WA_WEBHOOK_SECRET a sa valeur par défaut : n'importe qui sur le réseau peut faire écrire le bot. Change-la dans le .env.",
+  );
+}
 
 type Envelope = {
   event?: string;
@@ -33,7 +41,7 @@ export async function POST(request: Request) {
   }
 
   const message = body.payload?.message;
-  if (body.event !== "message.received" || !message?.from || message.fromMe || message.isGroupMsg || message.from.endsWith("@g.us")) {
+  if (body.event !== "message.received" || !message?.from || message.fromMe || message.isGroupMsg || !PRIVATE_CHAT.test(message.from)) {
     return new Response(null, { status: 204 });
   }
 

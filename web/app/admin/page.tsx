@@ -9,6 +9,8 @@ type Session =
   | { reachable: false; detail?: string }
   | { reachable: true; ok: boolean; connected: boolean; ready: boolean; qr: string | null };
 
+type AdminReport = Pick<Report, "id" | "createdAt" | "source" | "verdict" | "typeArnaque" | "numero" | "messageSimple">;
+
 function qrSrc(qr: string) {
   if (qr.startsWith("data:image")) return qr;
   if (/^[A-Za-z0-9+/=]+$/.test(qr) && qr.length > 100) return `data:image/png;base64,${qr}`;
@@ -17,7 +19,7 @@ function qrSrc(qr: string) {
 
 export default function AdminPage() {
   const [session, setSession] = useState<Session | null>(null);
-  const [reports, setReports] = useState<Report[]>([]);
+  const [reports, setReports] = useState<AdminReport[]>([]);
 
   useEffect(() => {
     let stop = false;
@@ -29,7 +31,7 @@ export default function AdminPage() {
       ]);
       if (stop) return;
       setSession((await sessionResponse.json()) as Session);
-      const body = (await reportsResponse.json()) as { reports: Report[] };
+      const body = (await reportsResponse.json()) as { reports: AdminReport[] };
       setReports(body.reports);
     }
 

@@ -11,37 +11,57 @@ const empty = (): StoreData => ({
 });
 
 function read(): StoreData {
+  let raw: string;
   try {
-    const parsed = JSON.parse(fs.readFileSync(file, "utf8")) as Partial<StoreData>;
-    return {
-      reports: (parsed.reports ?? []).map((report) => ({
-        ...report,
-        typeArnaque: report.typeArnaque ?? "autre",
-        expediteur: report.expediteur ?? "",
-      })),
-      chats: parsed.chats ?? [],
-      seenMessageIds: parsed.seenMessageIds ?? [],
-    };
+    raw = fs.readFileSync(file, "utf8");
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") return empty();
+    throw error;
+  }
+
+  let parsed: Partial<StoreData>;
+  try {
+    parsed = JSON.parse(raw) as Partial<StoreData>;
   } catch {
+    const backup = file.replace(/\.json$/, `.corrompu-${Date.now()}.json`);
+    fs.renameSync(file, backup);
+    console.error(`store.json illisible, mis de côté dans ${backup}`);
     return empty();
   }
+
+  return {
+    reports: (parsed.reports ?? []).map((report) => ({
+      ...report,
+      typeArnaque: report.typeArnaque ?? "autre",
+      expediteur: report.expediteur ?? "",
+    })),
+    chats: parsed.chats ?? [],
+    seenMessageIds: parsed.seenMessageIds ?? [],
+  };
 }
 
 function write(data: StoreData) {
   fs.mkdirSync(path.dirname(file), { recursive: true });
-  fs.writeFileSync(file, JSON.stringify(data, null, 2));
+  const temp = `${file}.${process.pid}.tmp`;
+  fs.writeFileSync(temp, JSON.stringify(data, null, 2));
+  try {
+    fs.renameSync(temp, file);
+  } catch {
+    fs.copyFileSync(temp, file);
+    fs.rmSync(temp, { force: true });
+  }
 }
 
-let chain: Promise<unknown> = Promise.resolve();
+const shared = globalThis as typeof globalThis & { __alerteStoreChain?: Promise<unknown> };
 
 function update<T>(fn: (data: StoreData) => T): Promise<T> {
-  const run = chain.then(() => {
+  const run = (shared.__alerteStoreChain ?? Promise.resolve()).then(() => {
     const data = read();
     const result = fn(data);
     write(data);
     return result;
   });
-  chain = run.then(
+  shared.__alerteStoreChain = run.then(
     () => undefined,
     () => undefined,
   );
