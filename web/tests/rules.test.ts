@@ -40,6 +40,9 @@ test("le dépôt par erreur est rouge même si le modèle dit vert", () => {
   assert.equal(result.verdict, "rouge");
   assert.equal(result.type, "depot_par_erreur");
   assert.notEqual(result.messageSimple, "C'est un vrai message T-Money.");
+  assert.ok(result.messageSimple.length > 240);
+  assert.match(result.messageSimple, /dépôt par erreur/i);
+  assert.match(result.suiteArnaque, /second renvoi|plainte/i);
 });
 
 test("le faux concours est rouge", () => {

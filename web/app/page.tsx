@@ -248,7 +248,7 @@ export default function HomePage() {
         if (fileInput.current) fileInput.current.value = "";
       }
       window.setTimeout(() => {
-        conversationTopRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        conversationTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 60);
     } catch {
       setError(
@@ -386,7 +386,7 @@ export default function HomePage() {
         <div className="flex flex-col gap-6">
           <section
             aria-label="Formulaire de vérification"
-            className="rounded-xl border border-line-strong bg-card p-4 shadow-xs sm:p-6"
+            className={`rounded-xl border border-line-strong bg-card p-4 shadow-xs sm:p-6 ${bubbles.length > 0 || busy ? "order-2" : ""}`}
           >
             <form
               className="flex flex-col gap-4"
@@ -574,7 +574,7 @@ export default function HomePage() {
           <section
             ref={conversationTopRef}
             aria-label="Résultats et historique de la session"
-            className="rounded-xl border border-line bg-card p-4 shadow-xs sm:p-6"
+            className={`scroll-mt-4 rounded-xl border border-line bg-card p-4 shadow-xs sm:p-6 ${bubbles.length > 0 || busy ? "order-1" : ""}`}
           >
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3 border-b border-line pb-3">
               <div>

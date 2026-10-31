@@ -144,6 +144,68 @@ const ADVICE: Record<ScamType, string[]> = {
   aucune: ["Ne fais rien dans l'urgence.", "Demande l'avis d'un proche avant d'envoyer de l'argent."],
 };
 
+const NORMAL_MESSAGE =
+  "Ce message a la forme d'un avis déjà exécuté : le nom de l'opérateur, un montant, l'autre partie, un nouveau solde et une référence. Il ne demande ni de renvoyer l'argent, ni un code, ni d'ouvrir un lien. Contrôlez quand même le solde dans votre application avant de considérer cet argent comme disponible.";
+
+const EXPLAIN: Record<ScamType, string> = {
+  depot_par_erreur:
+    "C'est l'arnaque au dépôt par erreur. On vous affirme qu'un transfert est arrivé sur votre compte et on vous demande de le renvoyer, souvent en vous laissant une petite commission. Ce dépôt n'existe presque jamais : le solde à croire est celui de votre application, pas celui du SMS. Si vous renvoyez l'argent, il part de votre vrai solde et vous ne le récupérez pas. Ne répondez pas, n'appelez pas ce numéro, et ne faites aucun transfert.",
+  faux_gain:
+    "C'est une arnaque au faux gain. On vous annonce un lot ou un concours auquel vous n'avez pas joué, puis on vous fait payer des frais de retrait, de dossier ou d'activation. L'argent promis n'existe pas : les frais, eux, partent tout de suite. N'envoyez rien et n'ouvrez aucun lien, même si le message cite Moov ou T-Money.",
+  faux_agent:
+    "Ce message se fait passer pour T-Money, Moov ou une banque, mais un vrai avis arrive sous le nom de l'entreprise, pas depuis un numéro de téléphone. Ici on vous pousse à appeler, à confirmer ou à payer un particulier. Ne rappelez pas ce numéro et vérifiez l'opération uniquement dans votre application officielle.",
+  demande_code:
+    "On vous demande votre code, votre PIN, ou de taper une suite avec * et #. T-Money, Moov et votre banque ne demandent jamais ces codes : les taper peut valider un retrait vers le numéro de l'escroc. Ne dictez rien, ne transférez rien, et ne composez aucun code que vous n'avez pas choisi vous-même.",
+  lien_piege:
+    "Le message contient un lien à ouvrir pour « confirmer », « débloquer » ou « recevoir ». Les avis T-Money et Moov n'envoient pas de lien. La page imite un service officiel pour prendre votre code ou votre argent. N'ouvrez pas le lien : passez par l'application officielle ou par l'agence.",
+  banque_bloquee:
+    "On vous menace de bloquer votre compte, votre carte ou votre ligne, puis on vous demande de confirmer par un lien ou par SMS. Une vraie banque ne règle pas ça dans un message. N'envoyez aucune information. Vérifiez en agence, ou appelez le numéro écrit au dos de votre carte.",
+  faux_colis:
+    "On vous annonce un colis retenu, souvent en douane, et des frais à payer à un numéro privé pour le libérer. Si vous n'attendez pas de colis, ignorez le message. Même si vous en attendez un, ne payez jamais la livraison à un particulier : passez par le transporteur que vous avez choisi.",
+  faux_emploi:
+    "On vous promet un emploi, souvent à domicile, puis des frais d'inscription, de dossier ou de formation avant de commencer. Un vrai employeur ne fait pas payer l'embauche. Ne versez rien et cherchez l'entreprise vous-même avant de répondre.",
+  faux_pret:
+    "On vous promet un crédit rapide, puis des frais de dossier ou d'avance à payer avant de recevoir l'argent. Le prêt n'arrive pas : seuls les frais partent. Ne payez jamais pour débloquer un crédit. Passez par une banque ou une microfinance que vous connaissez déjà.",
+  urgence_proche:
+    "Quelqu'un se présente comme un proche, annonce un nouveau numéro et demande de l'argent tout de suite, souvent pour un hôpital ou un accident. L'urgence sert à vous empêcher d'appeler le vrai numéro. Appelez cette personne sur son ancien numéro, et posez-lui une question que vous êtes seuls à connaître, avant d'envoyer quoi que ce soit.",
+  autre:
+    "Ce message pousse à agir vite : payer, rappeler ou confirmer, sans que vous puissiez vérifier par vous-même. L'urgence et le numéro privé sont les signes à retenir. Ne faites rien tant que vous n'avez pas contrôlé le solde dans votre application et demandé l'avis d'un proche.",
+  aucune: NORMAL_MESSAGE,
+};
+
+const SUITE: Partial<Record<ScamType, string>> = {
+  depot_par_erreur: "Ensuite on insiste, on menace de porter plainte, ou on demande un second renvoi « pour corriger l'erreur ».",
+  faux_gain: "Ensuite on réclame d'autres frais : taxe, code de validation, ou un second paiement pour « débloquer » le lot.",
+  faux_agent: "Ensuite on demande le code reçu par SMS, ou un transfert « de vérification » vers un autre numéro.",
+  demande_code: "Dès que le code est donné, un retrait part vers le numéro de l'escroc.",
+  lien_piege: "La page demande le code reçu par SMS ou les identifiants de l'application.",
+  banque_bloquee: "Le lien ou l'appel demande la carte, le code, ou un virement « de déblocage ».",
+  faux_colis: "Après le premier paiement, de nouveaux frais apparaissent : douane, stockage, livraison express.",
+  faux_emploi: "Après les frais d'inscription, on réclame un uniforme, un badge ou une formation payante.",
+  faux_pret: "Le prêt est « approuvé » mais bloqué jusqu'à un nouveau paiement.",
+  urgence_proche: "Le montant augmente, ou un second proche écrit pour confirmer l'histoire.",
+  autre: "La prochaine étape est presque toujours un paiement ou un code.",
+};
+
+export function explainFor(verdict: Verdict, type: ScamType) {
+  if (verdict === "vert") return NORMAL_MESSAGE;
+  if (type === "aucune") return EXPLAIN.autre;
+  return EXPLAIN[type] ?? EXPLAIN.autre;
+}
+
+export function suiteFor(type: ScamType) {
+  return SUITE[type] ?? "";
+}
+
+const LEGIT_TONE = /vrai (avis|message)|aucune demande|message conforme|pas une arnaque|rien de suspect|message normal/i;
+
+export function chooseMessage(current: string, verdict: Verdict, type: ScamType) {
+  const text = current.trim();
+  const denies = LEGIT_TONE.test(text);
+  if (text.length >= 240 && !(verdict !== "vert" && denies)) return text;
+  return explainFor(verdict, type);
+}
+
 export function adviceFor(verdict: Verdict, type: ScamType, modelActions: string[]) {
   if (verdict === "vert") {
     return modelActions.length ? modelActions.slice(0, 2) : ["Vérifie quand même ton solde avant de dépenser l'argent."];

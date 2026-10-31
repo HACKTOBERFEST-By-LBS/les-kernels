@@ -1,3 +1,4 @@
+import { chooseMessage, suiteFor } from "./knowledge.ts";
 import type { ChatMode, Scan, ScamType, Verdict } from "./types";
 
 export type RuleHit = { verdict: Verdict; type: ScamType; raison: string };
@@ -140,12 +141,6 @@ const RULES: Rule[] = [
 
 const RANK: Record<Verdict, number> = { vert: 0, orange: 1, rouge: 2 };
 
-const DEFAULT_MESSAGE: Record<Verdict, string> = {
-  rouge: "C'est une arnaque. Ne renvoie rien, ne donne aucun code, ne clique sur rien.",
-  orange: "Ce message est douteux. Ne fais rien avant d'avoir vérifié.",
-  vert: "Ce message ressemble à un vrai avis de transaction.",
-};
-
 const DEFAULT_ACTIONS: Record<Verdict, string[]> = {
   rouge: [
     "Ne renvoie pas d'argent et ne donne aucun code.",
@@ -182,20 +177,23 @@ export function applyRules(text: string, scan: Scan): Scan {
   if (hits.length === 0) {
     return {
       ...scan,
-      messageSimple: scan.messageSimple || DEFAULT_MESSAGE[scan.verdict],
+      messageSimple: chooseMessage(scan.messageSimple, scan.verdict, scan.type),
+      suiteArnaque: scan.suiteArnaque || (scan.verdict === "vert" ? "" : suiteFor(scan.type)),
       actions: scan.actions.length ? scan.actions : DEFAULT_ACTIONS[scan.verdict],
     };
   }
 
   const verdict = worst(scan.verdict, hits[0].verdict);
   const raised = verdict !== scan.verdict;
+  const type = scan.type === "aucune" || scan.type === "autre" ? hits[0].type : scan.type;
   const ruleReasons = hits.map((hit) => hit.raison);
   return {
     ...scan,
     verdict,
-    type: scan.type === "aucune" || scan.type === "autre" ? hits[0].type : scan.type,
+    type,
     raisons: [...new Set([...ruleReasons, ...scan.raisons])].slice(0, 4),
-    messageSimple: raised || !scan.messageSimple ? DEFAULT_MESSAGE[verdict] : scan.messageSimple,
+    messageSimple: chooseMessage(scan.messageSimple, verdict, type),
+    suiteArnaque: scan.suiteArnaque || (verdict === "vert" ? "" : suiteFor(type)),
     actions: raised || scan.actions.length === 0 ? DEFAULT_ACTIONS[verdict] : scan.actions,
   };
 }
@@ -209,7 +207,8 @@ export function applyMemory(scan: Scan, people: number): Scan {
     ...scan,
     verdict,
     raisons: [raison, ...scan.raisons].slice(0, 4),
-    messageSimple: raised ? DEFAULT_MESSAGE[verdict] : scan.messageSimple,
+    messageSimple: chooseMessage(raised ? "" : scan.messageSimple, verdict, scan.type),
+    suiteArnaque: scan.suiteArnaque || (verdict === "vert" ? "" : suiteFor(scan.type)),
     actions: raised ? DEFAULT_ACTIONS[verdict] : scan.actions,
   };
 }

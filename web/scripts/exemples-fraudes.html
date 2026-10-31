@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <title>Exemples de discussions frauduleuses</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { margin: 0; background: #111; }
+    .phone {
+      width: 390px;
+      background: #efeae2;
+      font-family: "Segoe UI", sans-serif;
+      color: #111;
+      padding-bottom: 14px;
+    }
+    header {
+      background: #1f2c34;
+      color: #fff;
+      padding: 16px 16px 14px;
+    }
+    .app { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; color: #9ec9b8; }
+    h1 { margin: 4px 0 0; font-size: 18px; font-weight: 700; }
+    .num { margin-top: 2px; font-size: 13px; color: #d7e6df; font-variant-numeric: tabular-nums; }
+    .thread { display: flex; flex-direction: column; gap: 8px; padding: 14px 12px 4px; }
+    .in, .out {
+      max-width: 86%;
+      padding: 8px 10px 6px;
+      border-radius: 10px;
+      font-size: 15px;
+      line-height: 1.35;
+      white-space: pre-wrap;
+    }
+    .in { align-self: flex-start; background: #fff; border-top-left-radius: 2px; }
+    .out { align-self: flex-end; background: #d9fdd3; border-top-right-radius: 2px; }
+    time { display: block; margin-top: 4px; text-align: right; font-size: 11px; color: #667781; }
+  </style>
+</head>
+<body>
+  <article class="phone" id="depot-par-erreur">
+    <header><div class="app">Discussion</div><h1>Koffi</h1><div class="num">+228 00 00 00 12</div></header>
+    <div class="thread">
+      <div class="in">Bonjour. J'ai envoyé 50 000 FCFA par erreur sur votre numéro.<time>14:02</time></div>
+      <div class="in">Renvoyez tout de suite sur +228 00 00 00 12. Je vous laisse 5 000 FCFA pour le dérangement.<time>14:02</time></div>
+      <div class="in">C'est urgent, sinon je porte plainte à la police.<time>14:03</time></div>
+    </div>
+  </article>
+  <article class="phone" id="faux-gain">
+    <header><div class="app">Discussion</div><h1>Promo Moov</h1><div class="num">+228 00 00 00 98</div></header>
+    <div class="thread">
+      <div class="in">Félicitations ! Vous avez gagné 200 000 FCFA au tirage Moov.<time>09:11</time></div>
+      <div class="out">Je n'ai joué à aucun concours.<time>09:14</time></div>
+      <div class="in">Le lot est déjà à votre nom. Payez 2 000 FCFA de frais de retrait au +228 00 00 00 98, puis ouvrez https://moov-gain.example<time>09:14</time></div>
+    </div>
+  </article>
+  <article class="phone" id="faux-agent">
+    <header><div class="app">Discussion</div><h1>T-Money Sécurité</h1><div class="num">+228 00 00 00 21</div></header>
+    <div class="thread">
+      <div class="in">T-Money : activité suspecte sur votre compte. Un agent va vous appeler.<time>16:40</time></div>
+      <div class="in">Pour éviter le blocage, envoyez maintenant votre code PIN au +228 00 00 00 21.<time>16:40</time></div>
+      <div class="out">Un agent T-Money ne demande pas le PIN.<time>16:41</time></div>
+      <div class="in">Dernier délai : sans le code, votre compte sera fermé ce soir.<time>16:41</time></div>
+    </div>
+  </article>
+  <article class="phone" id="banque-bloquee">
+    <header><div class="app">Discussion</div><h1>Alerte compte</h1><div class="num">+228 00 00 00 33</div></header>
+    <div class="thread">
+      <div class="in">Votre compte bancaire est bloqué après une opération inhabituelle.<time>11:05</time></div>
+      <div class="in">Confirmez votre identité avant ce soir sur https://verif-compte.example sinon la carte sera désactivée.<time>11:05</time></div>
+      <div class="out">Je passe à l'agence.<time>11:08</time></div>
+      <div class="in">Trop tard pour l'agence. Le lien est le seul moyen de réactiver le compte.<time>11:08</time></div>
+    </div>
+  </article>
+  <article class="phone" id="faux-colis">
+    <header><div class="app">Discussion</div><h1>Livraison</h1><div class="num">+228 00 00 00 34</div></header>
+    <div class="thread">
+      <div class="in">Votre colis est retenu en douane à Lomé.<time>08:20</time></div>
+      <div class="out">Je n'attends aucun colis.<time>08:27</time></div>
+      <div class="in">Le colis est à votre nom. Payez 8 500 FCFA de frais de dédouanement au +228 00 00 00 34 pour la livraison aujourd'hui.<time>08:27</time></div>
+    </div>
+  </article>
+  <article class="phone" id="faux-emploi">
+    <header><div class="app">Discussion</div><h1>Recrutement</h1><div class="num">+228 00 00 00 45</div></header>
+    <div class="thread">
+      <div class="in">Offre d'emploi à domicile : 150 000 FCFA par mois, sans diplôme.<time>10:02</time></div>
+      <div class="out">C'est quoi le travail ?<time>10:06</time></div>
+      <div class="in">Saisie simple. Payez 5 000 FCFA de frais d'inscription au +228 00 00 00 45 pour commencer demain.<time>10:06</time></div>
+    </div>
+  </article>
+  <article class="phone" id="faux-pret">
+    <header><div class="app">Discussion</div><h1>Crédit express</h1><div class="num">+228 00 00 00 56</div></header>
+    <div class="thread">
+      <div class="in">Crédit rapide de 100 000 FCFA, sans garantie, réponse dans l'heure.<time>13:15</time></div>
+      <div class="out">Quelles conditions ?<time>13:18</time></div>
+      <div class="in">Payez d'abord 7 000 FCFA de frais de dossier au +228 00 00 00 56. Le prêt part juste après.<time>13:18</time></div>
+    </div>
+  </article>
+  <article class="phone" id="urgence-proche">
+    <header><div class="app">Discussion</div><h1>Maman</h1><div class="num">+228 00 00 00 67</div></header>
+    <div class="thread">
+      <div class="in">C'est moi. J'ai changé de numéro, l'ancien est cassé.<time>18:44</time></div>
+      <div class="in">Urgent : je suis à l'hôpital. Envoie 20 000 FCFA maintenant sur +228 00 00 00 67.<time>18:44</time></div>
+      <div class="out">J'appelle ton ancien numéro.<time>18:45</time></div>
+      <div class="in">Ne perds pas de temps à appeler. Le médecin attend l'argent.<time>18:45</time></div>
+    </div>
+  </article>
+  <article class="phone" id="code-ussd">
+    <header><div class="app">Discussion</div><h1>Retrait gain</h1><div class="num">+228 00 00 00 78</div></header>
+    <div class="thread">
+      <div class="in">Votre gain de 80 000 FCFA est prêt.<time>15:01</time></div>
+      <div class="in">Pour le recevoir, tapez *145*1*22800000078# puis confirmez avec votre code.<time>15:01</time></div>
+      <div class="out">Je ne tape aucun code.<time>15:03</time></div>
+      <div class="in">Sans ce code le gain est annulé dans une heure.<time>15:03</time></div>
+    </div>
+  </article>
+  <article class="phone" id="lien-confirmation">
+    <header><div class="app">Discussion</div><h1>Confirmation T-Money</h1><div class="num">+228 00 00 00 77</div></header>
+    <div class="thread">
+      <div class="in">Vous avez reçu 15 000 FCFA de K. A.<time>12:22</time></div>
+      <div class="in">Confirmez sur https://t-money-verif.example et envoyez le code reçu au +228 00 00 00 77.<time>12:22</time></div>
+      <div class="out">Les vrais avis n'ont pas de lien.<time>12:24</time></div>
+      <div class="in">Si vous ne confirmez pas, l'argent sera repris.<time>12:24</time></div>
+    </div>
+  </article>
+</body>
+</html>
