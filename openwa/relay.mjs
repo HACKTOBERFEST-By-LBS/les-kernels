@@ -46,6 +46,7 @@ async function tick() {
           event: "message.received",
           payload: {
             message: {
+              ...message,
               id,
               from: message.from,
               body: message.body ?? "",

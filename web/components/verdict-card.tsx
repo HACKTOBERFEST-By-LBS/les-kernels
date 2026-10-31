@@ -66,6 +66,11 @@ export function VerdictCard({
               <span>{headline(report.verdict)}</span>
             </span>
             <span className="text-xs font-semibold text-foreground">{style.sublabel}</span>
+            {report.risque !== null ? (
+              <span className="inline-flex items-center rounded-md border border-line-strong bg-card px-2.5 py-1 font-mono text-xs font-bold tabular-nums text-foreground">
+                Risque {report.risque} %
+              </span>
+            ) : null}
           </div>
 
           {report.heat ? (

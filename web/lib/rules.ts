@@ -252,6 +252,21 @@ export function scamOverridesCourse(mode: ChatMode, text: string) {
   return looksLikeMoneySms(text);
 }
 
+const RISK_RANGE: Record<Verdict, [number, number]> = {
+  vert: [5, 25],
+  orange: [40, 70],
+  rouge: [80, 99],
+};
+
+export function riskPercent(verdict: Verdict, text: string, expediteur: string, people: number) {
+  const hits = evaluateRules(text, expediteur);
+  const red = hits.filter((hit) => hit.verdict === "rouge").length;
+  const orange = hits.length - red;
+  const [low, high] = RISK_RANGE[verdict];
+  const raw = low + red * 6 + orange * 4 + Math.min(people, 4) * 3;
+  return Math.min(high, Math.max(low, raw));
+}
+
 export function headline(verdict: Verdict) {
   if (verdict === "rouge") return "ARNAQUE";
   if (verdict === "orange") return "DOUTEUX";

@@ -19,6 +19,7 @@ type WaMessage = {
   from?: string;
   body?: string;
   caption?: string;
+  filename?: string;
   type?: string;
   mimetype?: string;
   isMedia?: boolean;
@@ -80,9 +81,10 @@ export async function POST(request: Request) {
     }
   }
 
+  const caption = message.caption && message.caption !== message.filename ? message.caption : "";
   const result = await handleMessage({
     chatId: message.from,
-    text: isMedia ? message.caption || "" : message.body || "",
+    text: isMedia ? caption : message.body || "",
     image,
     source: "whatsapp",
   });

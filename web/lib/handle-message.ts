@@ -10,7 +10,14 @@ import {
 } from "./gemma";
 import { adviceFor, REFLEXES, VICTIM_STEPS } from "./knowledge";
 import { heatFor, heatLabel, normalizeNumber, reportersFor, similarReports } from "./reputation";
-import { applyMemory, headline, mentionedPhone, rulesOnlyScan, scamOverridesCourse } from "./rules";
+import {
+  applyMemory,
+  headline,
+  mentionedPhone,
+  riskPercent,
+  rulesOnlyScan,
+  scamOverridesCourse,
+} from "./rules";
 import { addReport, getChat, readStore, saveChat } from "./store";
 import type { ChatState, HandleResult, PublicReport, Report, Scan, Source } from "./types";
 
@@ -46,6 +53,7 @@ function toPublic(report: Report): PublicReport {
     heat: report.verdict === "rouge" ? heatFor(count) : null,
     count,
     similar: 0,
+    risque: null,
   };
 }
 
@@ -97,12 +105,19 @@ async function analyze(chat: ChatState, incoming: Incoming): Promise<HandleResul
   const next = { ...chat, mode: "scanner" as const };
   await saveChat(next);
 
-  const pub = { ...toPublic(report), similar: memory.people };
+  const risque = riskPercent(
+    scan.verdict,
+    [text, scan.texteLu, scan.lien, scan.demande].join("\n"),
+    scan.expediteur,
+    memory.people,
+  );
+  const pub = { ...toPublic(report), similar: memory.people, risque };
   return reply(next, formatReport(pub), pub);
 }
 
 export function formatReport(pub: PublicReport) {
   const lines = [`${headline(pub.verdict)} — ${pub.messageSimple}`];
+  if (pub.risque !== null) lines.push(`Risque d'arnaque : ${pub.risque} %`);
   if (pub.montant) lines.push(`Montant lu : ${pub.montant}`);
   if (pub.raisons.length) {
     lines.push("", "Pourquoi :", ...pub.raisons.slice(0, 3).map((raison) => `• ${raison}`));

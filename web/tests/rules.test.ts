@@ -1,6 +1,14 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { applyRules, evaluateRules, headline, mentionedPhone, rulesOnlyScan, scamOverridesCourse } from "../lib/rules.ts";
+import {
+  applyRules,
+  evaluateRules,
+  headline,
+  mentionedPhone,
+  riskPercent,
+  rulesOnlyScan,
+  scamOverridesCourse,
+} from "../lib/rules.ts";
 import type { Scan } from "../lib/types.ts";
 import { EXAMPLES } from "../lib/examples.ts";
 
@@ -86,6 +94,16 @@ test("si Gemma tombe, une arnaque évidente reste signalée rouge, un message ne
 
 test("un numéro écrit dans la capture est retrouvé même si le modèle l'oublie", () => {
   assert.equal(mentionedPhone(text("Dépôt par erreur")), "+228 00 00 00 12");
+});
+
+test("le risque reste dans la plage de son verdict et monte avec les signes", () => {
+  const officiel = riskPercent("vert", text("Avis officiel"), "TMONEY", 0);
+  const depot = riskPercent("rouge", text("Dépôt par erreur"), "+228 00 00 00 12", 0);
+  const signale = riskPercent("rouge", text("Dépôt par erreur"), "+228 00 00 00 12", 4);
+  assert.ok(officiel >= 5 && officiel <= 25);
+  assert.ok(depot >= 80 && depot <= 99);
+  assert.ok(signale > depot);
+  assert.ok(riskPercent("orange", "", "", 0) >= 40);
 });
 
 test("le titre du verdict est fixé par le code", () => {

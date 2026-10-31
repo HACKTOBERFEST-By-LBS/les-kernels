@@ -1,3 +1,5 @@
+import { createDecipheriv, hkdfSync } from "node:crypto";
+
 const DEFAULT_KEY = "hackathon-dev-key";
 
 export function openwaConfig() {
@@ -36,9 +38,47 @@ function findBase64(value: unknown): string | null {
   return null;
 }
 
+const MEDIA_KEY_INFO: Record<string, string> = {
+  image: "WhatsApp Image Keys",
+  document: "WhatsApp Document Keys",
+};
+const MEDIA_MAC_BYTES = 10;
+
+async function decryptLocally(message: Record<string, unknown>) {
+  const url = message.deprecatedMms3Url || message.clientUrl;
+  const info = MEDIA_KEY_INFO[String(message.type)];
+  if (typeof url !== "string" || typeof message.mediaKey !== "string" || !info) return null;
+
+  const response = await fetch(url.trim(), {
+    headers: { Origin: "https://web.whatsapp.com", Referer: "https://web.whatsapp.com/" },
+    signal: AbortSignal.timeout(20000),
+  });
+  if (!response.ok) return null;
+  const encrypted = Buffer.from(await response.arrayBuffer());
+  const keys = Buffer.from(
+    hkdfSync("sha256", Buffer.from(message.mediaKey, "base64"), Buffer.alloc(32), info, 112),
+  );
+  const decipher = createDecipheriv("aes-256-cbc", keys.subarray(16, 48), keys.subarray(0, 16));
+  const plain = Buffer.concat([
+    decipher.update(encrypted.subarray(0, -MEDIA_MAC_BYTES)),
+    decipher.final(),
+  ]);
+  return {
+    mimeType: typeof message.mimetype === "string" ? message.mimetype.split(";")[0] : "image/jpeg",
+    data: plain.toString("base64"),
+  };
+}
+
 export async function downloadWhatsAppMedia(
   message: Record<string, unknown>,
 ): Promise<{ mimeType: string; data: string } | null> {
+  try {
+    const local = await decryptLocally(message);
+    if (local) return local;
+  } catch (error) {
+    console.error("Déchiffrement local du média impossible", error);
+  }
+
   const { baseUrl, apiKey } = openwaConfig();
   for (const route of MEDIA_ROUTES) {
     try {

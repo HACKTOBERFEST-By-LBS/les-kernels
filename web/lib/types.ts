@@ -91,6 +91,7 @@ export type PublicReport = {
   heat: Heat | null;
   count: number;
   similar: number;
+  risque: number | null;
 };
 
 export type HandleResult = {
