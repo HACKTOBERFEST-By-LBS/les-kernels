@@ -59,6 +59,49 @@ export function reportersFor(reports: Report[], numero: string, now = Date.now()
   return people.size;
 }
 
+export const MEMORY_MS = 30 * 24 * 60 * 60 * 1000;
+const MIN_SIMILARITY = 0.35;
+
+function words(text: string) {
+  return new Set(
+    text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .split(/[^a-z]+/)
+      .filter((word) => word.length >= 3),
+  );
+}
+
+export function similarity(a: string, b: string) {
+  const left = words(a);
+  const right = words(b);
+  if (left.size === 0 || right.size === 0) return 0;
+  let shared = 0;
+  for (const word of left) if (right.has(word)) shared += 1;
+  return shared / (left.size + right.size - shared);
+}
+
+export function similarReports(reports: Report[], text: string, chatId: string, now = Date.now()) {
+  if (words(text).size < 4) return { people: 0, previews: [] as string[] };
+  const matches = reports
+    .filter(
+      (report) =>
+        report.verdict === "rouge" &&
+        report.chatId !== chatId &&
+        report.preview &&
+        now - new Date(report.createdAt).getTime() <= MEMORY_MS,
+    )
+    .map((report) => ({ report, score: similarity(text, report.preview) }))
+    .filter((match) => match.score >= MIN_SIMILARITY)
+    .sort((a, b) => b.score - a.score);
+
+  return {
+    people: new Set(matches.map((match) => match.report.chatId)).size,
+    previews: [...new Set(matches.map((match) => match.report.preview))].slice(0, 3),
+  };
+}
+
 export function numberCards(reports: Report[], now = Date.now()) {
   const groups = new Map<string, Report[]>();
   for (const report of recentRedReports(reports, now)) {

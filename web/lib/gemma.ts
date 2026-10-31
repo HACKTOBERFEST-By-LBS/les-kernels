@@ -132,9 +132,13 @@ export async function scanMessage(
   text: string,
   image?: { mimeType: string; data: string },
   sender = "",
+  memory: string[] = [],
 ): Promise<Scan> {
   const prompt = [
-    "Lis ce message Mobile Money et remplis le JSON :",
+    memory.length
+      ? `Messages proches déjà signalés comme arnaques par d'autres utilisateurs :\n${memory.map((item) => `- ${item}`).join("\n")}`
+      : "",
+    "Lis ce message et remplis le JSON :",
     '{"verdict":"vert|orange|rouge","type":"","expediteur":"","texte_lu":"","numero":"","montant":"","demande":"","lien":"","raisons":[],"suite_arnaque":"","message_simple":"","actions":[]}',
     sender ? `Expéditeur indiqué par l'utilisateur : ${sender}` : "",
     image ? "Le message est dans l'image." : "",

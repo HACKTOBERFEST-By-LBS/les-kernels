@@ -200,6 +200,20 @@ export function applyRules(text: string, scan: Scan): Scan {
   };
 }
 
+export function applyMemory(scan: Scan, people: number): Scan {
+  if (people <= 0) return scan;
+  const raison = `Ce message ressemble beaucoup à des arnaques déjà signalées par ${people} personne${people > 1 ? "s" : ""}.`;
+  const verdict = people >= 2 ? worst(scan.verdict, "orange") : scan.verdict;
+  const raised = verdict !== scan.verdict;
+  return {
+    ...scan,
+    verdict,
+    raisons: [raison, ...scan.raisons].slice(0, 4),
+    messageSimple: raised ? DEFAULT_MESSAGE[verdict] : scan.messageSimple,
+    actions: raised ? DEFAULT_ACTIONS[verdict] : scan.actions,
+  };
+}
+
 export function rulesOnlyScan(text: string, expediteur = ""): Scan | null {
   if (evaluateRules(text, expediteur).length === 0) return null;
   const base: Scan = {

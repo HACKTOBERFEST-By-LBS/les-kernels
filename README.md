@@ -70,10 +70,13 @@ Canal : site Next.js, et un numéro WhatsApp relié par QR. Les deux passent par
 
 **Comment un SMS est jugé**
 
-1. Gemma lit le texte ou la capture, recopie le SMS, repère l'expéditeur, le montant, le numéro à payer et le type d'arnaque (`web/lib/gemma.ts`).
-2. Des règles fixes repassent derrière Gemma (`web/lib/rules.ts`) : demande de code ou de PIN, demande de renvoi, frais pour un gain, lien, avis « T-Money » venant d'un numéro de téléphone. Une règle peut rendre le verdict plus sévère, jamais plus doux.
-3. La réponse commence toujours par **ARNAQUE**, **DOUTEUX** ou **NORMAL**, puis dit pourquoi et quoi faire.
-4. Si Gemma ne répond pas, une arnaque évidente est quand même signalée, avec la mention « analyse partielle ».
+1. Gemma lit le texte ou la capture avec 13 exemples annotés sous les yeux (`web/lib/knowledge.ts`) : vrais avis d'opérateur et de banque, faux dépôt, faux agent, faux gain, code USSD piégé, fausse alerte de banque, faux colis, faux emploi, faux prêt, faux proche. Il recopie le SMS, repère l'expéditeur, le montant, le numéro à payer, le type d'arnaque, et relève les fautes d'un message qui se dit officiel.
+2. **Mémoire collective** : les arnaques proches déjà signalées par d'autres personnes sont transmises à Gemma. La réponse dit « déjà signalé par N personnes », et à partir de 2 personnes le verdict ne peut plus être NORMAL.
+3. Des règles fixes repassent derrière Gemma (`web/lib/rules.ts`) : code ou PIN, renvoi d'argent, frais pour un gain, un colis, un emploi ou un prêt, lien, code USSD vers un numéro, faux proche, menace de blocage, urgence, avis « officiel » venant d'un numéro de téléphone. Une règle peut rendre le verdict plus sévère, jamais plus doux.
+4. La réponse commence toujours par **ARNAQUE**, **DOUTEUX** ou **NORMAL**, puis dit pourquoi et donne des conseils écrits par l'équipe pour chaque type d'arnaque.
+5. Si Gemma ne répond pas, une arnaque évidente est quand même signalée, avec la mention « analyse partielle ».
+
+**Se protéger** : `/conseils` donne les 5 réflexes anti-arnaque, `/victime` dit quoi faire si on a déjà payé ou donné son code.
 
 **Mur des numéros** (`/numeros`) : un numéro signalé rouge par 4 personnes différentes en 48 h devient « Arnaqueur actif ». Une même personne ne compte qu'une fois.
 

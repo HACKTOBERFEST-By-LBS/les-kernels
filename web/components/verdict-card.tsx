@@ -33,6 +33,11 @@ export function VerdictCard({ report }: { report: PublicReport }) {
         ) : null}
       </div>
       <p className="mt-4 text-lg leading-7">{report.messageSimple}</p>
+      {report.similar > 0 ? (
+        <p className={`mt-2 text-sm font-semibold ${hunted ? "text-white" : "text-danger"}`}>
+          Un message très proche a déjà été signalé par {report.similar} personne{report.similar > 1 ? "s" : ""}.
+        </p>
+      ) : null}
       {report.montant || report.numero || report.expediteur ? (
         <dl className={`mt-3 grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-sm ${muted}`}>
           {report.expediteur ? (

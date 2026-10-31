@@ -90,6 +90,7 @@ export type PublicReport = {
   actions: string[];
   heat: Heat | null;
   count: number;
+  similar: number;
 };
 
 export type HandleResult = {

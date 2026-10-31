@@ -9,8 +9,8 @@ import {
   scanMessage,
 } from "./gemma";
 import { adviceFor, REFLEXES, VICTIM_STEPS } from "./knowledge";
-import { heatFor, heatLabel, normalizeNumber, reportersFor } from "./reputation";
-import { headline, rulesOnlyScan, scamOverridesCourse } from "./rules";
+import { heatFor, heatLabel, normalizeNumber, reportersFor, similarReports } from "./reputation";
+import { applyMemory, headline, rulesOnlyScan, scamOverridesCourse } from "./rules";
 import { addReport, getChat, readStore, saveChat } from "./store";
 import type { ChatState, HandleResult, PublicReport, Report, Scan, Source } from "./types";
 
@@ -45,6 +45,7 @@ function toPublic(report: Report): PublicReport {
     actions: report.actions,
     heat: report.verdict === "rouge" ? heatFor(count) : null,
     count,
+    similar: 0,
   };
 }
 
@@ -54,15 +55,19 @@ async function analyze(chat: ChatState, incoming: Incoming): Promise<HandleResul
     return reply(chat, "Envoie le SMS ou la capture.");
   }
 
+  const reports = readStore().reports;
+  const before = similarReports(reports, text, chat.chatId);
   let scan: Scan;
   try {
-    scan = await scanMessage(text, incoming.image, incoming.sender);
+    scan = await scanMessage(text, incoming.image, incoming.sender, before.previews);
   } catch (error) {
     const fallback = error instanceof ConfigError || !text ? null : rulesOnlyScan(text, incoming.sender);
     if (!fallback) throw error;
     console.error("Gemma indisponible, verdict par les règles seules", error);
     scan = fallback;
   }
+  const memory = text ? before : similarReports(reports, scan.texteLu, chat.chatId);
+  scan = applyMemory(scan, memory.people);
   const numero = normalizeNumber(scan.numero);
   const report: Report = {
     id: crypto.randomUUID(),
@@ -87,7 +92,7 @@ async function analyze(chat: ChatState, incoming: Incoming): Promise<HandleResul
   const next = { ...chat, mode: "scanner" as const };
   await saveChat(next);
 
-  const pub = toPublic(report);
+  const pub = { ...toPublic(report), similar: memory.people };
   return reply(next, formatReport(pub), pub);
 }
 
@@ -98,6 +103,9 @@ export function formatReport(pub: PublicReport) {
     lines.push("", "Pourquoi :", ...pub.raisons.slice(0, 3).map((raison) => `• ${raison}`));
   }
   if (pub.suiteArnaque) lines.push("", `Suite probable : ${pub.suiteArnaque}`);
+  if (pub.similar > 0) {
+    lines.push("", `Un message très proche a déjà été signalé comme arnaque par ${pub.similar} personne${pub.similar > 1 ? "s" : ""}.`);
+  }
   if (pub.heat) {
     lines.push("", `${heatLabel(pub.heat)} — signalé par ${pub.count} personne${pub.count > 1 ? "s" : ""} en 48 h.`);
   }
