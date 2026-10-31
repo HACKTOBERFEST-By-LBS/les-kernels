@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useState } from "react";
+import { headline } from "@/lib/rules";
 import type { Report } from "@/lib/types";
 
 type Session =
@@ -89,7 +90,7 @@ export default function AdminPage() {
           {reports.map((report) => (
             <article key={report.id} className="rounded-2xl border border-line bg-card px-4 py-3">
               <p className="text-xs uppercase tracking-wide text-[#5c5348]">
-                {report.verdict} · {report.source}
+                {headline(report.verdict)} · {report.source === "whatsapp" ? "WhatsApp" : report.source === "web" ? "Site" : "Exemple"}
                 {report.numero ? ` · ${report.numero}` : ""}
               </p>
               <p className="mt-1 text-sm">{report.messageSimple}</p>

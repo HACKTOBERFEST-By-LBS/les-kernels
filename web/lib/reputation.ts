@@ -1,9 +1,6 @@
 import type { Heat, Report } from "./types";
 
 export const WINDOW_MS = 48 * 60 * 60 * 1000;
-
-const OFFICIAL = /t-?\s?money|moov|togocom|flooz/i;
-
 export function normalizeNumber(raw: string) {
   const digits = raw.replace(/\D/g, "");
   if (digits.length === 8) return `+228${digits}`;
@@ -80,8 +77,4 @@ export function gangs(reports: Report[], now = Date.now()) {
       numeros: [...numeros],
       count: numeros.size,
     }));
-}
-
-export function isOfficialSender(value: string) {
-  return OFFICIAL.test(value) && normalizeNumber(value) === "";
 }

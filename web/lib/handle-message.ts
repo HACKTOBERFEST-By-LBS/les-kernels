@@ -1,5 +1,6 @@
 import { menuText, parseCommand } from "./commands";
 import {
+  ConfigError,
   extractCourse,
   gradeQuiz,
   makePlan,
@@ -8,6 +9,7 @@ import {
   scanMessage,
 } from "./gemma";
 import { heatFor, heatLabel, normalizeNumber, recentRedReports } from "./reputation";
+import { headline } from "./rules";
 import { addReport, getChat, readStore, saveChat } from "./store";
 import type { ChatState, HandleResult, PublicReport, Report, Source } from "./types";
 
@@ -15,6 +17,7 @@ type Incoming = {
   chatId: string;
   text: string;
   image?: { mimeType: string; data: string };
+  sender?: string;
   source: Exclude<Source, "demo">;
 };
 
@@ -34,11 +37,11 @@ function toPublic(report: Report): PublicReport {
   const count = countFor(report.numero);
   return {
     verdict: report.verdict,
+    typeArnaque: report.typeArnaque,
+    expediteur: report.expediteur,
     numero: normalizeNumber(report.numero),
     montant: report.montant,
-    demande: report.demande,
     lien: report.lien,
-    script: report.script,
     raisons: report.raisons,
     suiteArnaque: report.suiteArnaque,
     messageSimple: report.messageSimple,
@@ -54,23 +57,25 @@ async function analyze(chat: ChatState, incoming: Incoming): Promise<HandleResul
     return reply(chat, "Envoie le SMS ou la capture.");
   }
 
-  const scan = await scanMessage(text, incoming.image);
+  const scan = await scanMessage(text, incoming.image, incoming.sender);
   const numero = normalizeNumber(scan.numero);
   const report: Report = {
     id: crypto.randomUUID(),
     createdAt: new Date().toISOString(),
     source: incoming.source,
     chatId: chat.chatId,
-    preview: text.slice(0, 180),
+    preview: (text || scan.texteLu).slice(0, 180),
     numero,
     verdict: scan.verdict,
+    typeArnaque: scan.type,
+    expediteur: scan.expediteur,
     montant: scan.montant,
     demande: scan.demande,
     lien: scan.lien,
-    script: scan.script,
+    script: scan.type,
     raisons: scan.raisons,
-    suiteArnaque: scan.suite_arnaque,
-    messageSimple: scan.message_simple,
+    suiteArnaque: scan.suiteArnaque,
+    messageSimple: scan.messageSimple,
     actions: scan.actions,
   };
   await addReport(report);
@@ -78,11 +83,21 @@ async function analyze(chat: ChatState, incoming: Incoming): Promise<HandleResul
   await saveChat(next);
 
   const pub = toPublic(report);
-  const lines = [pub.messageSimple || "Message lu."];
+  return reply(next, formatReport(pub), pub);
+}
+
+export function formatReport(pub: PublicReport) {
+  const lines = [`${headline(pub.verdict)} — ${pub.messageSimple}`];
+  if (pub.montant) lines.push(`Montant lu : ${pub.montant}`);
+  if (pub.raisons.length) {
+    lines.push("", "Pourquoi :", ...pub.raisons.slice(0, 3).map((raison) => `• ${raison}`));
+  }
   if (pub.suiteArnaque) lines.push("", `Suite probable : ${pub.suiteArnaque}`);
-  if (pub.heat) lines.push("", `${heatLabel(pub.heat)} — ${pub.count} signalement${pub.count > 1 ? "s" : ""} en 48 h.`);
-  if (pub.actions.length) lines.push("", pub.actions.map((action) => `• ${action}`).join("\n"));
-  return reply(next, lines.filter((line) => line !== undefined).join("\n"), pub);
+  if (pub.heat) {
+    lines.push("", `${heatLabel(pub.heat)} — signalé par ${pub.count} personne${pub.count > 1 ? "s" : ""} en 48 h.`);
+  }
+  if (pub.actions.length) lines.push("", "À faire :", ...pub.actions.map((action) => `• ${action}`));
+  return lines.join("\n");
 }
 
 export async function handleMessage(incoming: Incoming): Promise<HandleResult> {
@@ -101,7 +116,7 @@ export async function handleMessage(incoming: Incoming): Promise<HandleResult> {
       return reply(next, "Retour au scanner. Envoie un SMS ou une capture.");
     }
     if (command?.type === "verifier") {
-      const next = { ...chat, mode: "attente_message" as const };
+      const next = { ...chat, mode: "scanner" as const };
       await saveChat(next);
       return reply(next, "Envoie le SMS ou la capture.");
     }
@@ -191,7 +206,11 @@ export async function handleMessage(incoming: Incoming): Promise<HandleResult> {
 
     return await analyze(chat, incoming);
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Le service a échoué.";
-    return reply(chat, message);
+    if (error instanceof ConfigError) return { ...reply(chat, error.message), failed: true };
+    console.error("Traitement du message impossible", error);
+    return {
+      ...reply(chat, "Je n'ai pas pu lire ce message. Réessaie dans un instant. En attendant : ne renvoie rien et ne donne aucun code."),
+      failed: true,
+    };
   }
 }

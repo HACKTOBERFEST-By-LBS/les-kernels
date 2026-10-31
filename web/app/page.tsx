@@ -10,11 +10,11 @@ type Bubble = {
   role: "user" | "bot";
   text: string;
   report?: PublicReport | null;
+  failed?: boolean;
 };
 
 const MODE_LABEL: Record<ChatMode, string> = {
   scanner: "Scanner",
-  attente_message: "En attente du SMS",
   attente_cours: "En attente du cours",
   apprendre: "Cours",
   attente_date: "Date d'examen",
@@ -63,7 +63,7 @@ export default function HomePage() {
       setMode(result.mode);
       setBubbles((current) => [
         ...current,
-        { id: crypto.randomUUID(), role: "bot", text: result.reply, report: result.report },
+        { id: crypto.randomUUID(), role: "bot", text: result.reply, report: result.report, failed: result.failed },
       ]);
       setImage(null);
     } catch {
@@ -100,7 +100,11 @@ export default function HomePage() {
               <div key={bubble.id} className={bubble.role === "user" ? "ml-8" : "mr-8"}>
                 <p
                   className={`whitespace-pre-wrap rounded-2xl px-4 py-3 text-sm leading-6 ${
-                    bubble.role === "user" ? "bg-[#1d1914] text-[#f3ecdf]" : "bg-[#f6f0e6]"
+                    bubble.role === "user"
+                      ? "bg-[#1d1914] text-[#f3ecdf]"
+                      : bubble.failed
+                        ? "border border-[#9f1d1d] bg-[#fde8e4] text-[#7f1d1d]"
+                        : "bg-[#f6f0e6]"
                   }`}
                 >
                   {bubble.text}

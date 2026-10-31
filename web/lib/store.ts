@@ -14,7 +14,11 @@ function read(): StoreData {
   try {
     const parsed = JSON.parse(fs.readFileSync(file, "utf8")) as Partial<StoreData>;
     return {
-      reports: parsed.reports ?? [],
+      reports: (parsed.reports ?? []).map((report) => ({
+        ...report,
+        typeArnaque: report.typeArnaque ?? "autre",
+        expediteur: report.expediteur ?? "",
+      })),
       chats: parsed.chats ?? [],
       seenMessageIds: parsed.seenMessageIds ?? [],
     };

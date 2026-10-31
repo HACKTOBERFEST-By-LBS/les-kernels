@@ -2,9 +2,17 @@ export type Verdict = "vert" | "orange" | "rouge";
 
 export type Heat = "vu" | "revient" | "arnaqueur";
 
+export type ScamType =
+  | "depot_par_erreur"
+  | "faux_gain"
+  | "faux_agent"
+  | "demande_code"
+  | "lien_piege"
+  | "autre"
+  | "aucune";
+
 export type ChatMode =
   | "scanner"
-  | "attente_message"
   | "attente_cours"
   | "apprendre"
   | "attente_date"
@@ -14,14 +22,16 @@ export type Source = "web" | "whatsapp" | "demo";
 
 export type Scan = {
   verdict: Verdict;
+  type: ScamType;
+  expediteur: string;
+  texteLu: string;
   numero: string;
   montant: string;
   demande: string;
   lien: string;
-  script: string;
   raisons: string[];
-  suite_arnaque: string;
-  message_simple: string;
+  suiteArnaque: string;
+  messageSimple: string;
   actions: string[];
 };
 
@@ -33,6 +43,8 @@ export type Report = {
   preview: string;
   numero: string;
   verdict: Verdict;
+  typeArnaque: ScamType;
+  expediteur: string;
   montant: string;
   demande: string;
   lien: string;
@@ -62,11 +74,11 @@ export type StoreData = {
 
 export type PublicReport = {
   verdict: Verdict;
+  typeArnaque: ScamType;
+  expediteur: string;
   numero: string;
   montant: string;
-  demande: string;
   lien: string;
-  script: string;
   raisons: string[];
   suiteArnaque: string;
   messageSimple: string;
@@ -79,4 +91,5 @@ export type HandleResult = {
   reply: string;
   mode: ChatMode;
   report: PublicReport | null;
+  failed?: boolean;
 };
