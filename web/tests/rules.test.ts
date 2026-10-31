@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { applyRules, evaluateRules, headline, scamOverridesCourse } from "../lib/rules.ts";
+import { applyRules, evaluateRules, headline, rulesOnlyScan, scamOverridesCourse } from "../lib/rules.ts";
 import type { Scan } from "../lib/types.ts";
 import { EXAMPLES } from "../lib/examples.ts";
 
@@ -72,6 +72,13 @@ test("pendant l'envoi d'un cours, seul un message clairement frauduleux est dét
   assert.equal(scamOverridesCourse("attente_cours", "Chapitre 2 : la monnaie, le FCFA et la BCEAO."), false);
   assert.equal(scamOverridesCourse("attente_cours", text("Faux concours")), true);
   assert.equal(scamOverridesCourse("scanner", text("Faux concours")), false);
+});
+
+test("si Gemma tombe, une arnaque évidente reste signalée rouge, un message neutre n'a pas de verdict", () => {
+  const fallback = rulesOnlyScan(text("Dépôt par erreur"));
+  assert.equal(fallback?.verdict, "rouge");
+  assert.equal(fallback?.numero, "+228 00 00 00 12");
+  assert.equal(rulesOnlyScan(text("Avis officiel")), null);
 });
 
 test("le titre du verdict est fixé par le code", () => {

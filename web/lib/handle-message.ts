@@ -9,9 +9,9 @@ import {
   scanMessage,
 } from "./gemma";
 import { heatFor, heatLabel, normalizeNumber, reportersFor } from "./reputation";
-import { headline, scamOverridesCourse } from "./rules";
+import { headline, rulesOnlyScan, scamOverridesCourse } from "./rules";
 import { addReport, getChat, readStore, saveChat } from "./store";
-import type { ChatState, HandleResult, PublicReport, Report, Source } from "./types";
+import type { ChatState, HandleResult, PublicReport, Report, Scan, Source } from "./types";
 
 type Incoming = {
   chatId: string;
@@ -53,7 +53,15 @@ async function analyze(chat: ChatState, incoming: Incoming): Promise<HandleResul
     return reply(chat, "Envoie le SMS ou la capture.");
   }
 
-  const scan = await scanMessage(text, incoming.image, incoming.sender);
+  let scan: Scan;
+  try {
+    scan = await scanMessage(text, incoming.image, incoming.sender);
+  } catch (error) {
+    const fallback = error instanceof ConfigError || !text ? null : rulesOnlyScan(text, incoming.sender);
+    if (!fallback) throw error;
+    console.error("Gemma indisponible, verdict par les règles seules", error);
+    scan = fallback;
+  }
   const numero = normalizeNumber(scan.numero);
   const report: Report = {
     id: crypto.randomUUID(),

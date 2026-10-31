@@ -143,6 +143,29 @@ export function applyRules(text: string, scan: Scan): Scan {
   };
 }
 
+export function rulesOnlyScan(text: string, expediteur = ""): Scan | null {
+  if (evaluateRules(text, expediteur).length === 0) return null;
+  const base: Scan = {
+    verdict: "vert",
+    type: "aucune",
+    expediteur,
+    texteLu: text,
+    numero: new RegExp(PHONE).exec(text)?.[0] ?? "",
+    montant: "",
+    demande: "",
+    lien: "",
+    raisons: [],
+    suiteArnaque: "",
+    messageSimple: "",
+    actions: [],
+  };
+  const scan = applyRules(text, base);
+  return {
+    ...scan,
+    raisons: [...scan.raisons, "Analyse partielle : Gemma n'a pas répondu, seules les règles de base ont parlé."].slice(-4),
+  };
+}
+
 const MONEY_WORDS = /fcfa|\bcfa\b|solde|t-?\s?money|moov|flooz|mobile money|transfert|d[ée]p[ôo]t/i;
 
 export function looksLikeMoneySms(text: string) {
