@@ -8,6 +8,11 @@ export const TYPE_LABEL: Record<ScamType, string> = {
   faux_agent: "Faux agent T-Money ou Moov",
   demande_code: "Vol de code ou de PIN",
   lien_piege: "Lien piégé",
+  banque_bloquee: "Fausse alerte de banque",
+  faux_colis: "Faux colis bloqué",
+  faux_emploi: "Fausse offre d'emploi",
+  faux_pret: "Faux prêt rapide",
+  urgence_proche: "Faux proche en urgence",
   autre: "Autre arnaque",
   aucune: "",
 };

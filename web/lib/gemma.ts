@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { examplesPrompt } from "./knowledge";
 import { applyRules } from "./rules";
 import type { Scan, ScamType, Verdict } from "./types";
 
@@ -20,7 +21,7 @@ verdict vaut exactement vert, orange ou rouge.
 vert : avis de transaction conforme, aucune demande d'action.
 orange : message incomplet, ou douteux sans demande claire.
 rouge : on demande de renvoyer de l'argent, un code, un PIN, des frais, ou d'ouvrir un lien.
-type vaut exactement depot_par_erreur, faux_gain, faux_agent, demande_code, lien_piege, autre ou aucune.
+type vaut exactement depot_par_erreur, faux_gain, faux_agent, demande_code, lien_piege, banque_bloquee, faux_colis, faux_emploi, faux_pret, urgence_proche, autre ou aucune.
 expediteur : le nom ou numéro de l'expéditeur s'il est visible (en haut d'une capture), sinon une chaîne vide.
 texte_lu : le texte exact du SMS tel que tu le lis.
 numero : le numéro du particulier à contacter ou à payer, chiffres seulement avec indicatif si présent, ou une chaîne vide.
@@ -35,6 +36,11 @@ const TYPES: ScamType[] = [
   "faux_agent",
   "demande_code",
   "lien_piege",
+  "banque_bloquee",
+  "faux_colis",
+  "faux_emploi",
+  "faux_pret",
+  "urgence_proche",
   "autre",
   "aucune",
 ];
@@ -135,7 +141,7 @@ export async function scanMessage(
     .filter(Boolean)
     .join("\n\n");
 
-  const raw = await askJson<RawScan>(SCAN_SYSTEM, prompt, image);
+  const raw = await askJson<RawScan>(`${SCAN_SYSTEM}\n\n${examplesPrompt()}`, prompt, image);
   const texteLu = String(raw.texte_lu ?? "").slice(0, 2000);
   const scan: Scan = {
     verdict: asVerdict(raw.verdict),

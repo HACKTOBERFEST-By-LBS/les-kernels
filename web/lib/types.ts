@@ -8,6 +8,11 @@ export type ScamType =
   | "faux_agent"
   | "demande_code"
   | "lien_piege"
+  | "banque_bloquee"
+  | "faux_colis"
+  | "faux_emploi"
+  | "faux_pret"
+  | "urgence_proche"
   | "autre"
   | "aucune";
 
