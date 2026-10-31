@@ -25,14 +25,18 @@ export default function AdminPage() {
     let stop = false;
 
     async function load() {
-      const [sessionResponse, reportsResponse] = await Promise.all([
-        fetch("/api/admin/session", { cache: "no-store" }),
-        fetch("/api/reports", { cache: "no-store" }),
-      ]);
-      if (stop) return;
-      setSession((await sessionResponse.json()) as Session);
-      const body = (await reportsResponse.json()) as { reports: AdminReport[] };
-      setReports(body.reports);
+      try {
+        const [sessionResponse, reportsResponse] = await Promise.all([
+          fetch("/api/admin/session", { cache: "no-store" }),
+          fetch("/api/reports", { cache: "no-store" }),
+        ]);
+        if (stop) return;
+        setSession((await sessionResponse.json()) as Session);
+        const body = (await reportsResponse.json()) as { reports: AdminReport[] };
+        setReports(body.reports);
+      } catch {
+        if (!stop) setSession({ reachable: false, detail: "Le site ne répond pas." });
+      }
     }
 
     const first = window.setTimeout(() => {
