@@ -77,14 +77,24 @@ async function ask(
   if (image) parts.push({ inlineData: image });
   parts.push({ text: prompt });
 
-  const response = await ai.models.generateContent({
-    model: MODEL,
-    contents: [{ role: "user", parts }],
-    config: { temperature: 0.2 },
-  });
-
-  return response.text ?? "";
+  for (let attempt = 0; ; attempt += 1) {
+    try {
+      const response = await ai.models.generateContent({
+        model: MODEL,
+        contents: [{ role: "user", parts }],
+        config: { temperature: 0.2 },
+      });
+      return response.text ?? "";
+    } catch (error) {
+      const status = (error as { status?: number }).status ?? 0;
+      const transient = status === 429 || status >= 500;
+      if (!transient || attempt >= RETRY_DELAYS_MS.length) throw error;
+      await new Promise((resolve) => setTimeout(resolve, RETRY_DELAYS_MS[attempt]));
+    }
+  }
 }
+
+const RETRY_DELAYS_MS = [500, 1000, 2000, 3000];
 
 async function askJson<T>(
   system: string,

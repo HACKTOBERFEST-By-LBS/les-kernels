@@ -1,11 +1,11 @@
 import type { NextConfig } from "next";
+import fs from "fs";
 import path from "path";
-import { loadEnvConfig } from "@next/env";
 
-loadEnvConfig(path.join(__dirname, ".."));
+const rootEnv = path.join(__dirname, "..", ".env");
+if (fs.existsSync(rootEnv)) process.loadEnvFile(rootEnv);
 
 const nextConfig: NextConfig = {
-  /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
   turbopack: {
