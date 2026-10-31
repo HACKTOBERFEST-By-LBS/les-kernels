@@ -23,6 +23,46 @@ export async function sendWhatsAppText(to: string, content: string) {
   return response.json();
 }
 
+const MEDIA_ROUTES = ["/api/media/decrypt", "/api/decryptMedia"];
+
+function findBase64(value: unknown): string | null {
+  if (typeof value === "string") return value.length > 100 ? value : null;
+  if (value && typeof value === "object") {
+    for (const key of ["response", "result", "data", "media", "base64"]) {
+      const found = findBase64((value as Record<string, unknown>)[key]);
+      if (found) return found;
+    }
+  }
+  return null;
+}
+
+export async function downloadWhatsAppMedia(
+  message: Record<string, unknown>,
+): Promise<{ mimeType: string; data: string } | null> {
+  const { baseUrl, apiKey } = openwaConfig();
+  for (const route of MEDIA_ROUTES) {
+    try {
+      const response = await fetch(`${baseUrl}${route}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
+        body: JSON.stringify({ message }),
+        signal: AbortSignal.timeout(20000),
+      });
+      if (!response.ok) continue;
+      const raw = response.headers.get("content-type")?.includes("json")
+        ? findBase64(await response.json())
+        : findBase64(await response.text());
+      if (!raw) continue;
+      const match = /^data:([^;]+);base64,([\s\S]*)$/.exec(raw);
+      const fallbackMime = typeof message.mimetype === "string" ? message.mimetype : "image/jpeg";
+      return match ? { mimeType: match[1], data: match[2] } : { mimeType: fallbackMime, data: raw };
+    } catch (error) {
+      console.error(`Téléchargement du média impossible via ${route}`, error);
+    }
+  }
+  return null;
+}
+
 type HealthBody = {
   status?: string;
   connected?: boolean;
